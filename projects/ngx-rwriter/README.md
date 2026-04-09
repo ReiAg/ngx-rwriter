@@ -132,6 +132,28 @@ You can wrap the editor in a container to control its width or height. The edito
 }
 ```
 
+### CSS Overrides
+
+The editor is designed to be easily customizable. Here is a list of the primary CSS classes you can target in your global stylesheet (e.g., `styles.css` or `styles.scss`) to change the look and feel:
+
+| Class | Description |
+| :--- | :--- |
+| `.rwriter-container` | The outermost wrapper of the entire component. |
+| `.dark-theme` | Applied to the container when `[theme]="'dark'"`. |
+| `.rwriter-toolbar` | The toolbar container holding all buttons, dropdowns, and pickers. |
+| `.separator` | The vertical divider between groups of toolbar buttons. |
+| `.color-picker-container` | Wrapper for the custom color picker toggle and dropdown. |
+| `.color-picker-label` | The button/label that opens the color palette. |
+| `.color-palette` | The popup container holding the color swatches. |
+| `.color-swatch` | The individual color squares inside the color palette. |
+| `.image-upload-label` | The label acting as the "Insert Image" button. |
+| `.editor-wrapper` | The relative wrapper directly around the contenteditable area. |
+| `.rwriter-editor` | The actual `contenteditable` div where text is typed and content is placed. |
+| `.image-resizer-overlay` | The border overlay that appears around a selected image. |
+| `.resizer-handle` | The draggable corner points (`.top-left`, `.bottom-right`, etc.) used for resizing. |
+
+*Note: Since the component uses Angular's default view encapsulation, you must place these overrides in your global styles, or use `::ng-deep` if styling from within a parent component.*
+
 ## License
 
 MIT
