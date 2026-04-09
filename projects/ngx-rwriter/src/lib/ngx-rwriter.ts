@@ -30,7 +30,7 @@ export interface ImageUploadConfig {
     }
   ],
   template: `
-    <div class="rwriter-container" [class.dark-theme]="theme === 'dark'">
+    <div class="rwriter-container" [class.dark-theme]="isDarkTheme">
       <div class="rwriter-toolbar">
         <!-- Formatting -->
         <select (change)="execCommand('formatBlock', $any($event.target).value)" [title]="translations.paragraphStyle">
@@ -338,9 +338,15 @@ export interface ImageUploadConfig {
 export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
   @ViewChild('editor', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
   
-  @Input() theme: 'light' | 'dark' = 'light';
+  @Input() theme: 'auto' | 'light' | 'dark' = 'auto';
   @Input() imageConfig: ImageUploadConfig = { mode: 'base64' };
   @Input() translations: RwriterTranslations = RW_EN;
+
+  get isDarkTheme(): boolean {
+    if (this.theme === 'dark') return true;
+    if (this.theme === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
 
   private onChange = (value: string) => {};
   public onTouched = () => {};

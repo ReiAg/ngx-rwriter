@@ -51,7 +51,7 @@ export class MyComponent {
 | :--- | :--- | :--- | :--- |
 | `imageConfig` | `ImageUploadConfig` | `{ mode: 'base64' }` | Configuration for how images are handled when inserted. |
 | `translations`| `RwriterTranslations`| `RW_EN` | Dictionary for overriding tooltip/placeholder text. |
-| `theme`       | `'light' \| 'dark'`   | `'light'` | Switches the editor interface between light and dark modes. |
+| `theme`       | `'auto' \| 'light' \| 'dark'` | `'auto'` | Switches the editor interface theme. Auto uses OS preference. |
 
 ### Internationalization (i18n)
 
