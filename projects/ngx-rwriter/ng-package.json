@@ -3,5 +3,6 @@
   "dest": "../../dist/ngx-rwriter",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "assets": ["LICENSE"]
 }
