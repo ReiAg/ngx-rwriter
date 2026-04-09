@@ -11,7 +11,8 @@ import {
   ChangeDetectorRef,
   OnInit,
   OnChanges,
-  OnDestroy
+  OnDestroy,
+  ViewEncapsulation
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
@@ -26,6 +27,7 @@ export interface ImageUploadConfig {
   selector: 'ngx-rwriter',
   standalone: true,
   imports: [CommonModule],
+  encapsulation: ViewEncapsulation.None,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -166,7 +168,7 @@ export interface ImageUploadConfig {
       flex-direction: column;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    .rwriter-toolbar {
+    .rwriter-container .rwriter-toolbar {
       padding: 10px;
       background: #fdfdfd;
       border-bottom: 1px solid #e0e0e0;
@@ -177,25 +179,30 @@ export interface ImageUploadConfig {
       border-top-left-radius: 6px;
       border-top-right-radius: 6px;
     }
-    .rwriter-toolbar button, .rwriter-toolbar select, .image-upload-label {
+    .rwriter-container .rwriter-toolbar button, 
+    .rwriter-container .rwriter-toolbar select, 
+    .rwriter-container .image-upload-label {
       padding: 6px 10px;
-      background: #fff;
-      border: 1px solid #dcdcdc;
-      border-style: solid; /* Force style for Tailwind compatibility */
+      background: #fff !important;
+      border: 1px solid #dcdcdc !important;
+      border-style: solid !important;
       border-radius: 4px;
       cursor: pointer;
       font-size: 13px;
-      color: #333;
+      color: #333 !important;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       transition: background 0.2s, border-color 0.2s;
     }
-    .rwriter-toolbar button:hover, .rwriter-toolbar select:hover, .image-upload-label:hover, .color-picker-label:hover {
-      background: #f0f0f0;
-      border-color: #bbb;
+    .rwriter-container .rwriter-toolbar button:hover, 
+    .rwriter-container .rwriter-toolbar select:hover, 
+    .rwriter-container .image-upload-label:hover, 
+    .rwriter-container .color-picker-label:hover {
+      background: #f0f0f0 !important;
+      border-color: #bbb !important;
     }
-    .rwriter-toolbar .separator {
+    .rwriter-container .rwriter-toolbar .separator {
       width: 1px;
       height: 24px;
       background: #e0e0e0;
@@ -203,12 +210,11 @@ export interface ImageUploadConfig {
       display: inline-block;
     }
     
-    /* Custom Color Pickers */
-    .color-picker-container {
+    .rwriter-container .color-picker-container {
       position: relative;
       display: inline-flex;
     }
-    .color-picker-label {
+    .rwriter-container .color-picker-label {
       padding: 6px 8px;
       background: #fff;
       border: 1px solid #dcdcdc;
@@ -220,7 +226,7 @@ export interface ImageUploadConfig {
       font-size: 14px;
       transition: background 0.2s, border-color 0.2s;
     }
-    .color-palette {
+    .rwriter-container .color-palette {
       position: absolute;
       top: 100%;
       left: 0;
@@ -237,7 +243,7 @@ export interface ImageUploadConfig {
       gap: 2px;
       width: max-content;
     }
-    .color-swatch {
+    .rwriter-container .color-swatch {
       width: 20px;
       height: 20px;
       cursor: pointer;
@@ -246,12 +252,12 @@ export interface ImageUploadConfig {
       box-sizing: border-box;
       border-radius: 2px;
     }
-    .color-swatch:hover {
+    .rwriter-container .color-swatch:hover {
       transform: scale(1.15);
       border-color: #000;
       z-index: 2;
     }
-    .clear-bg {
+    .rwriter-container .clear-bg {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -260,10 +266,10 @@ export interface ImageUploadConfig {
       background: #f9f9f9;
     }
 
-    .editor-wrapper {
+    .rwriter-container .editor-wrapper {
       position: relative;
     }
-    .rwriter-editor {
+    .rwriter-container .rwriter-editor {
       min-height: 300px;
       padding: 16px;
       outline: none;
@@ -271,44 +277,45 @@ export interface ImageUploadConfig {
       line-height: 1.6;
       font-size: 16px;
       text-align: initial;
+      color: inherit;
     }
 
     /* Isolation Styles to counteract Tailwind Preflight */
-    .rwriter-editor p { margin: 0 0 1em 0; }
-    .rwriter-editor h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; display: block; }
-    .rwriter-editor h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; display: block; }
-    .rwriter-editor h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; display: block; }
-    .rwriter-editor h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; display: block; }
+    .rwriter-container .rwriter-editor p { margin: 0 0 1em 0; display: block; }
+    .rwriter-container .rwriter-editor h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; display: block; }
+    .rwriter-container .rwriter-editor h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; display: block; }
+    .rwriter-container .rwriter-editor h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; display: block; }
+    .rwriter-container .rwriter-editor h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; display: block; }
     
-    .rwriter-editor ul { list-style-type: disc; padding-left: 40px; margin: 1em 0; display: block; }
-    .rwriter-editor ol { list-style-type: decimal; padding-left: 40px; margin: 1em 0; display: block; }
-    .rwriter-editor li { display: list-item; }
+    .rwriter-container .rwriter-editor ul { list-style-type: disc !important; padding-left: 40px !important; margin: 1em 0 !important; display: block !important; }
+    .rwriter-container .rwriter-editor ol { list-style-type: decimal !important; padding-left: 40px !important; margin: 1em 0 !important; display: block !important; }
+    .rwriter-container .rwriter-editor li { display: list-item !important; }
     
-    .rwriter-editor blockquote { margin: 1em 40px; }
-    .rwriter-editor b, .rwriter-editor strong { font-weight: bold; display: inline; }
-    .rwriter-editor i, .rwriter-editor em { font-style: italic; display: inline; }
-    .rwriter-editor u { text-decoration: underline; display: inline; }
+    .rwriter-container .rwriter-editor blockquote { margin: 1em 40px; }
+    .rwriter-container .rwriter-editor b, .rwriter-container .rwriter-editor strong { font-weight: bold; display: inline; }
+    .rwriter-container .rwriter-editor i, .rwriter-container .rwriter-editor em { font-style: italic; display: inline; }
+    .rwriter-container .rwriter-editor u { text-decoration: underline; display: inline; }
     
     /* Ensure background-color (hilite) is visible and not overridden */
-    .rwriter-editor [style*="background-color"] {
-      display: inline;
+    .rwriter-container .rwriter-editor [style*="background-color"] {
+      display: inline !important;
     }
 
-    .rwriter-editor img {
+    .rwriter-container .rwriter-editor img {
       max-width: 100%;
       cursor: pointer;
       transition: outline 0.1s;
     }
     
     /* Resizer overlay */
-    .image-resizer-overlay {
+    .rwriter-container .image-resizer-overlay {
       position: absolute;
       border: 2px dashed #007bff;
       pointer-events: none;
       box-sizing: border-box;
       z-index: 10;
     }
-    .resizer-handle {
+    .rwriter-container .resizer-handle {
       position: absolute;
       width: 12px;
       height: 12px;
@@ -318,53 +325,53 @@ export interface ImageUploadConfig {
       pointer-events: auto;
       box-sizing: border-box;
     }
-    .resizer-handle.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
-    .resizer-handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
-    .resizer-handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
-    .resizer-handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    .rwriter-container .resizer-handle.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
+    .rwriter-container .resizer-handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
+    .rwriter-container .resizer-handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
+    .rwriter-container .resizer-handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
     
     /* Dark Theme */
     .rwriter-container.dark-theme {
-      background: #1e1e1e;
-      border-color: #444;
-      color: #e0e0e0;
+      background: #1e1e1e !important;
+      border-color: #444 !important;
+      color: #e0e0e0 !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar {
-      background: #252526;
-      border-bottom-color: #444;
+      background: #252526 !important;
+      border-bottom-color: #444 !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar button,
     .rwriter-container.dark-theme .rwriter-toolbar select,
     .rwriter-container.dark-theme .image-upload-label,
     .rwriter-container.dark-theme .color-picker-label {
-      background: #333;
-      border-color: #555;
-      color: #e0e0e0;
+      background: #333 !important;
+      border-color: #555 !important;
+      color: #e0e0e0 !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar button:hover,
     .rwriter-container.dark-theme .rwriter-toolbar select:hover,
     .rwriter-container.dark-theme .image-upload-label:hover,
     .rwriter-container.dark-theme .color-picker-label:hover {
-      background: #444;
-      border-color: #666;
+      background: #444 !important;
+      border-color: #666 !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar .separator {
-      background: #444;
+      background: #444 !important;
     }
     .rwriter-container.dark-theme .color-palette {
-      background: #252526;
-      border-color: #444;
+      background: #252526 !important;
+      border-color: #444 !important;
     }
     .rwriter-container.dark-theme .color-swatch {
-      border-color: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.1) !important;
     }
     .rwriter-container.dark-theme .clear-bg {
-      color: #aaa;
-      background: #333;
+      color: #aaa !important;
+      background: #333 !important;
     }
   `]
 })
-export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
+export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, OnChanges, OnDestroy {
   @ViewChild('editor', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
   
   @Input() theme: 'auto' | 'light' | 'dark' = 'auto';
