@@ -181,6 +181,7 @@ export interface ImageUploadConfig {
       padding: 6px 10px;
       background: #fff;
       border: 1px solid #dcdcdc;
+      border-style: solid; /* Force style for Tailwind compatibility */
       border-radius: 4px;
       cursor: pointer;
       font-size: 13px;
@@ -199,6 +200,7 @@ export interface ImageUploadConfig {
       height: 24px;
       background: #e0e0e0;
       margin: 0 4px;
+      display: inline-block;
     }
     
     /* Custom Color Pickers */
@@ -210,6 +212,7 @@ export interface ImageUploadConfig {
       padding: 6px 8px;
       background: #fff;
       border: 1px solid #dcdcdc;
+      border-style: solid;
       border-radius: 4px;
       cursor: pointer;
       display: inline-flex;
@@ -224,6 +227,7 @@ export interface ImageUploadConfig {
       margin-top: 4px;
       background: #fff;
       border: 1px solid #ccc;
+      border-style: solid;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       border-radius: 4px;
       padding: 8px;
@@ -238,6 +242,7 @@ export interface ImageUploadConfig {
       height: 20px;
       cursor: pointer;
       border: 1px solid rgba(0,0,0,0.1);
+      border-style: solid;
       box-sizing: border-box;
       border-radius: 2px;
     }
@@ -263,12 +268,32 @@ export interface ImageUploadConfig {
       padding: 16px;
       outline: none;
       overflow-y: auto;
-      line-height: 1.5;
+      line-height: 1.6;
       font-size: 16px;
+      text-align: initial;
     }
-    .rwriter-editor p {
-      margin: 0 0 1em 0;
+
+    /* Isolation Styles to counteract Tailwind Preflight */
+    .rwriter-editor p { margin: 0 0 1em 0; }
+    .rwriter-editor h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; display: block; }
+    .rwriter-editor h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; display: block; }
+    .rwriter-editor h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; display: block; }
+    .rwriter-editor h4 { font-size: 1em; font-weight: bold; margin: 1.33em 0; display: block; }
+    
+    .rwriter-editor ul { list-style-type: disc; padding-left: 40px; margin: 1em 0; display: block; }
+    .rwriter-editor ol { list-style-type: decimal; padding-left: 40px; margin: 1em 0; display: block; }
+    .rwriter-editor li { display: list-item; }
+    
+    .rwriter-editor blockquote { margin: 1em 40px; }
+    .rwriter-editor b, .rwriter-editor strong { font-weight: bold; display: inline; }
+    .rwriter-editor i, .rwriter-editor em { font-style: italic; display: inline; }
+    .rwriter-editor u { text-decoration: underline; display: inline; }
+    
+    /* Ensure background-color (hilite) is visible and not overridden */
+    .rwriter-editor [style*="background-color"] {
+      display: inline;
     }
+
     .rwriter-editor img {
       max-width: 100%;
       cursor: pointer;
