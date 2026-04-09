@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgxRwriter } from 'ngx-rwriter';
+import { NgxRwriter, RW_EN, RW_RU, RW_KK, RwriterTranslations } from 'ngx-rwriter';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +11,15 @@ import { NgxRwriter } from 'ngx-rwriter';
       <h2>ngx-rwriter Demo</h2>
       <p>This is a rich text editor built natively in Angular 21.</p>
       
-      <lib-ngx-rwriter [(ngModel)]="content"></lib-ngx-rwriter>
+      <!-- Language Switcher -->
+      <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+        <strong>Language:</strong>
+        <button (click)="setLang(RW_EN)">English</button>
+        <button (click)="setLang(RW_RU)">Русский</button>
+        <button (click)="setLang(RW_KK)">Қазақша</button>
+      </div>
+
+      <lib-ngx-rwriter [(ngModel)]="content" [translations]="currentTranslations"></lib-ngx-rwriter>
 
       <div style="margin-top: 40px;">
         <h3>Raw HTML Output:</h3>
@@ -23,4 +31,15 @@ import { NgxRwriter } from 'ngx-rwriter';
 export class App {
   protected readonly title = signal('workspace');
   content = signal('<p>Start typing or add an image...</p>');
+  
+  // Expose the imported constants to the template
+  readonly RW_EN = RW_EN;
+  readonly RW_RU = RW_RU;
+  readonly RW_KK = RW_KK;
+
+  currentTranslations: RwriterTranslations = RW_EN;
+
+  setLang(lang: RwriterTranslations) {
+    this.currentTranslations = lang;
+  }
 }

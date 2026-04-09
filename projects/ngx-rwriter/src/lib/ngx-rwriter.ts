@@ -11,6 +11,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
+import { RwriterTranslations, RW_EN } from './rwriter-translations';
 
 export interface ImageUploadConfig {
   mode: 'base64' | 'upload';
@@ -32,15 +33,15 @@ export interface ImageUploadConfig {
     <div class="rwriter-container">
       <div class="rwriter-toolbar">
         <!-- Formatting -->
-        <select (change)="execCommand('formatBlock', $any($event.target).value)" title="Paragraph Style">
-          <option value="P">Paragraph</option>
-          <option value="H1">Heading 1</option>
-          <option value="H2">Heading 2</option>
-          <option value="H3">Heading 3</option>
-          <option value="H4">Heading 4</option>
+        <select (change)="execCommand('formatBlock', $any($event.target).value)" [title]="translations.paragraphStyle">
+          <option value="P">{{ translations.paragraph }}</option>
+          <option value="H1">{{ translations.heading1 }}</option>
+          <option value="H2">{{ translations.heading2 }}</option>
+          <option value="H3">{{ translations.heading3 }}</option>
+          <option value="H4">{{ translations.heading4 }}</option>
         </select>
 
-        <select (change)="execCommand('fontName', $any($event.target).value)" title="Font Family">
+        <select (change)="execCommand('fontName', $any($event.target).value)" [title]="translations.fontFamily">
           <option value="Arial">Arial</option>
           <option value="Times New Roman">Times New Roman</option>
           <option value="Courier New">Courier</option>
@@ -50,29 +51,29 @@ export interface ImageUploadConfig {
           <option value="Trebuchet MS">Trebuchet MS</option>
         </select>
 
-        <button type="button" (click)="execCommand('bold')" title="Bold"><b>B</b></button>
-        <button type="button" (click)="execCommand('italic')" title="Italic"><i>I</i></button>
-        <button type="button" (click)="execCommand('underline')" title="Underline"><u>U</u></button>
+        <button type="button" (click)="execCommand('bold')" [title]="translations.bold"><b>B</b></button>
+        <button type="button" (click)="execCommand('italic')" [title]="translations.italic"><i>I</i></button>
+        <button type="button" (click)="execCommand('underline')" [title]="translations.underline"><u>U</u></button>
         
         <span class="separator"></span>
 
         <!-- Alignment -->
-        <button type="button" (click)="align('Left')" title="Align Left">&#9776; L</button>
-        <button type="button" (click)="align('Center')" title="Align Center">&#9776; C</button>
-        <button type="button" (click)="align('Right')" title="Align Right">&#9776; R</button>
-        <button type="button" (click)="align('Full')" title="Justify">&#9776; J</button>
+        <button type="button" (click)="align('Left')" [title]="translations.alignLeft">&#9776; L</button>
+        <button type="button" (click)="align('Center')" [title]="translations.alignCenter">&#9776; C</button>
+        <button type="button" (click)="align('Right')" [title]="translations.alignRight">&#9776; R</button>
+        <button type="button" (click)="align('Full')" [title]="translations.justify">&#9776; J</button>
 
         <span class="separator"></span>
 
         <!-- Lists -->
-        <button type="button" (click)="execCommand('insertUnorderedList')" title="Bulleted List">&bull; List</button>
-        <button type="button" (click)="execCommand('insertOrderedList')" title="Numbered List">1. List</button>
+        <button type="button" (click)="execCommand('insertUnorderedList')" [title]="translations.bulletedList">&bull; List</button>
+        <button type="button" (click)="execCommand('insertOrderedList')" [title]="translations.numberedList">1. List</button>
 
         <span class="separator"></span>
 
         <!-- Colors -->
         <div class="color-picker-container" (mousedown)="$event.preventDefault()" (click)="toggleTextColorPicker()">
-          <div class="color-picker-label" title="Text Color">
+          <div class="color-picker-label" [title]="translations.textColor">
             <span class="color-icon" style="color: #d93025; font-weight: bold; font-family: serif; border-bottom: 3px solid currentColor; line-height: 1;">A</span>
           </div>
           <div class="color-palette" *ngIf="showTextColorPicker">
@@ -81,22 +82,22 @@ export interface ImageUploadConfig {
         </div>
 
         <div class="color-picker-container" (mousedown)="$event.preventDefault()" (click)="toggleBgColorPicker()">
-          <div class="color-picker-label" title="Background Color">
+          <div class="color-picker-label" [title]="translations.backgroundColor">
             <span class="color-icon" style="background: #fbbc04; color: #000; padding: 0 2px; font-family: serif; line-height: 1;">ab</span>
           </div>
           <div class="color-palette" *ngIf="showBgColorPicker">
             <div *ngFor="let c of colors" class="color-swatch" [style.background]="c" (click)="setBgColor(c, $event)" [title]="c"></div>
-            <div class="color-swatch clear-bg" title="Clear Background" (click)="setBgColor('transparent', $event)">&#10005;</div>
+            <div class="color-swatch clear-bg" [title]="translations.clearBackground" (click)="setBgColor('transparent', $event)">&#10005;</div>
           </div>
         </div>
 
         <span class="separator"></span>
 
         <!-- Insert -->
-        <button type="button" (click)="insertLink()" title="Insert Link">&#128279; Link</button>
+        <button type="button" (click)="insertLink()" [title]="translations.insertLink">&#128279; {{ translations.link }}</button>
         
-        <label class="image-upload-label" title="Insert Image">
-          &#128196; Image
+        <label class="image-upload-label" [title]="translations.insertImage">
+          &#128196; {{ translations.image }}
           <input type="file" accept="image/*" (change)="insertImage($event)" style="display:none">
         </label>
       </div>
@@ -274,6 +275,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
   @ViewChild('editor', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
   
   @Input() imageConfig: ImageUploadConfig = { mode: 'base64' };
+  @Input() translations: RwriterTranslations = RW_EN;
 
   private onChange = (value: string) => {};
   public onTouched = () => {};
@@ -408,7 +410,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
   }
 
   insertLink() {
-    const url = prompt('Enter link URL:');
+    const url = prompt(this.translations.enterLinkUrl);
     if (url) {
       this.execCommand('createLink', url);
     }

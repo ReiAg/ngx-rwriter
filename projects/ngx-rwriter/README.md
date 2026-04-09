@@ -50,6 +50,35 @@ export class MyComponent {
 | Property | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `imageConfig` | `ImageUploadConfig` | `{ mode: 'base64' }` | Configuration for how images are handled when inserted. |
+| `translations`| `RwriterTranslations`| `RW_EN` | Dictionary for overriding tooltip/placeholder text. |
+
+### Internationalization (i18n)
+
+`ngx-rwriter` provides a scalable translation input. It ships with built-in dictionaries for English, Russian, and Kazakh.
+
+```typescript
+import { NgxRwriter, RW_RU, RW_EN, RW_KK } from 'ngx-rwriter';
+
+@Component({
+  standalone: true,
+  imports: [NgxRwriter],
+  template: `
+    <lib-ngx-rwriter [translations]="currentLang"></lib-ngx-rwriter>
+  `
+})
+export class MyComponent {
+  // Use built-in Russian dictionary
+  currentLang = RW_RU; 
+  
+  // Or provide your own custom dictionary mapped to your app's i18n
+  /*
+  currentLang = {
+    paragraph: 'My Custom Paragraph',
+    // ... all other required keys
+  }
+  */
+}
+```
 
 ### Image Configuration
 
