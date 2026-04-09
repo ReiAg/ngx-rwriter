@@ -1,64 +1,107 @@
-# NgxRwriter
+# ngx-rwriter
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.0.
+`ngx-rwriter` is a powerful, lightweight, and modern Rich Text Editor for Angular 21+. It provides a familiar, Word-like interface with native support for images, alignment, and formatting.
 
-## Code scaffolding
+## Features
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+- **Formatting:** Bold, Italic, Underline, Paragraph Styles (P, H1-H4), Font Family selection, and Text/Background Color pickers.
+- **Lists:** Bulleted (`<ul>`) and Numbered (`<ol>`) lists.
+- **Alignment:** Left, Center, Right, and Justified alignment for both text and images.
+- **Image Support:**
+  - Drag-and-drop or select images.
+  - **Visual Resizing:** Click an image to reveal handles and resize it directly in the editor.
+  - **Flexible Uploads:** Choose between automatic Base64 encoding or custom server-side uploads.
+- **Links:** Easily insert and manage hyperlinks.
+- **Form Support:** Fully compatible with `ngModel` and Reactive Forms (`formControl`, `formControlName`).
+- **Clean Output:** Generates clean, semantic HTML.
 
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the library, run:
+## Installation
 
 ```bash
-ng build ngx-rwriter
+npm install ngx-rwriter
 ```
 
-This command will compile your project, and the build artifacts will be placed in the `dist/` directory.
+## Basic Usage
 
-### Publishing the Library
+### 1. Import the Component
 
-Once the project is built, you can publish your library by following these steps:
+Since `ngx-rwriter` is a standalone component, you can import it directly into your component or module.
 
-1. Navigate to the `dist` directory:
+```typescript
+import { NgxRwriter } from 'ngx-rwriter';
+import { FormsModule } from '@angular/forms';
 
-   ```bash
-   cd dist/ngx-rwriter
-   ```
-
-2. Run the `npm publish` command to publish your library to the npm registry:
-   ```bash
-   npm publish
-   ```
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
+@Component({
+  standalone: true,
+  imports: [NgxRwriter, FormsModule],
+  template: `
+    <lib-ngx-rwriter [(ngModel)]="htmlContent"></lib-ngx-rwriter>
+  `
+})
+export class MyComponent {
+  htmlContent = '<p>Hello World!</p>';
+}
 ```
 
-## Running end-to-end tests
+## Documentation
 
-For end-to-end (e2e) testing, run:
+### Inputs
 
-```bash
-ng e2e
+| Property | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `imageConfig` | `ImageUploadConfig` | `{ mode: 'base64' }` | Configuration for how images are handled when inserted. |
+
+### Image Configuration
+
+The `imageConfig` input allows you to control how images are stored.
+
+#### Mode: Base64 (Default)
+Images are converted to base64 strings and embedded directly in the HTML output. No backend setup is required.
+
+#### Mode: Upload (Server-side)
+To upload images to your own server, provide a custom `uploadFn`.
+
+```typescript
+import { ImageUploadConfig } from 'ngx-rwriter';
+
+editorConfig: ImageUploadConfig = {
+  mode: 'upload',
+  uploadFn: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Your upload logic here
+    const response = await myApiService.upload(formData);
+    return response.url; // Return the public URL of the image
+  }
+};
 ```
 
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+```html
+<lib-ngx-rwriter [imageConfig]="editorConfig"></lib-ngx-rwriter>
+```
 
-## Additional Resources
+### Advanced Image Features
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+#### Resizing
+Simply click on any image inside the editor. A blue dashed box with handles will appear. Drag the handles to resize the image while maintaining its aspect ratio.
+
+#### Alignment
+While an image is selected, using the alignment buttons (Left, Center, Right) will apply specific styles to the image:
+- **Left/Right:** Floats the image and allows text to wrap around it.
+- **Center:** Displays the image as a block element centered on the page.
+
+### Styling the Editor
+You can wrap the editor in a container to control its width or height. The editor component itself has a minimum height of `300px` and grows with content.
+
+```css
+.editor-container {
+  max-width: 900px;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+}
+```
+
+## License
+
+MIT

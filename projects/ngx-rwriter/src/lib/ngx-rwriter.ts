@@ -64,6 +64,34 @@ export interface ImageUploadConfig {
 
         <span class="separator"></span>
 
+        <!-- Lists -->
+        <button type="button" (click)="execCommand('insertUnorderedList')" title="Bulleted List">&bull; List</button>
+        <button type="button" (click)="execCommand('insertOrderedList')" title="Numbered List">1. List</button>
+
+        <span class="separator"></span>
+
+        <!-- Colors -->
+        <div class="color-picker-container" (mousedown)="$event.preventDefault()" (click)="toggleTextColorPicker()">
+          <div class="color-picker-label" title="Text Color">
+            <span class="color-icon" style="color: #d93025; font-weight: bold; font-family: serif; border-bottom: 3px solid currentColor; line-height: 1;">A</span>
+          </div>
+          <div class="color-palette" *ngIf="showTextColorPicker">
+            <div *ngFor="let c of colors" class="color-swatch" [style.background]="c" (click)="setTextColor(c, $event)" [title]="c"></div>
+          </div>
+        </div>
+
+        <div class="color-picker-container" (mousedown)="$event.preventDefault()" (click)="toggleBgColorPicker()">
+          <div class="color-picker-label" title="Background Color">
+            <span class="color-icon" style="background: #fbbc04; color: #000; padding: 0 2px; font-family: serif; line-height: 1;">ab</span>
+          </div>
+          <div class="color-palette" *ngIf="showBgColorPicker">
+            <div *ngFor="let c of colors" class="color-swatch" [style.background]="c" (click)="setBgColor(c, $event)" [title]="c"></div>
+            <div class="color-swatch clear-bg" title="Clear Background" (click)="setBgColor('transparent', $event)">&#10005;</div>
+          </div>
+        </div>
+
+        <span class="separator"></span>
+
         <!-- Insert -->
         <button type="button" (click)="insertLink()" title="Insert Link">&#128279; Link</button>
         
@@ -133,7 +161,7 @@ export interface ImageUploadConfig {
       justify-content: center;
       transition: background 0.2s, border-color 0.2s;
     }
-    .rwriter-toolbar button:hover, .rwriter-toolbar select:hover, .image-upload-label:hover {
+    .rwriter-toolbar button:hover, .rwriter-toolbar select:hover, .image-upload-label:hover, .color-picker-label:hover {
       background: #f0f0f0;
       border-color: #bbb;
     }
@@ -143,6 +171,61 @@ export interface ImageUploadConfig {
       background: #e0e0e0;
       margin: 0 4px;
     }
+    
+    /* Custom Color Pickers */
+    .color-picker-container {
+      position: relative;
+      display: inline-flex;
+    }
+    .color-picker-label {
+      padding: 6px 8px;
+      background: #fff;
+      border: 1px solid #dcdcdc;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      font-size: 14px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .color-palette {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      background: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-radius: 4px;
+      padding: 8px;
+      z-index: 100;
+      display: grid;
+      grid-template-columns: repeat(10, 20px);
+      gap: 2px;
+      width: max-content;
+    }
+    .color-swatch {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      border: 1px solid rgba(0,0,0,0.1);
+      box-sizing: border-box;
+      border-radius: 2px;
+    }
+    .color-swatch:hover {
+      transform: scale(1.15);
+      border-color: #000;
+      z-index: 2;
+    }
+    .clear-bg {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #666;
+      background: #f9f9f9;
+    }
+
     .editor-wrapper {
       position: relative;
     }
@@ -162,6 +245,7 @@ export interface ImageUploadConfig {
       cursor: pointer;
       transition: outline 0.1s;
     }
+    
     /* Resizer overlay */
     .image-resizer-overlay {
       position: absolute;
@@ -193,6 +277,20 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
 
   private onChange = (value: string) => {};
   public onTouched = () => {};
+
+  // Custom Color Picker State
+  showTextColorPicker = false;
+  showBgColorPicker = false;
+
+  // Material-like color palette
+  colors = [
+    '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
+    '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
+    '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
+    '#dd7e6b', '#ea9999', '#f9cb9c', '#ffe599', '#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8', '#b4a7d6', '#d5a6bd',
+    '#cc4125', '#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0',
+    '#a61c00', '#cc0000', '#e69138', '#f1c232', '#6aa84f', '#45818e', '#3c78d8', '#3d85c6', '#674ea7', '#a64d79'
+  ];
 
   // Image Resizer State
   selectedImage: HTMLImageElement | null = null;
@@ -247,6 +345,39 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
     document.execCommand(command, false, value);
     this.onInput();
   }
+
+  bgColor(color: string) {
+    this.editorRef.nativeElement.focus();
+    // hiliteColor is standard for text highlight in modern webkit browsers
+    document.execCommand('hiliteColor', false, color);
+    // fallback for Firefox
+    document.execCommand('backColor', false, color);
+    this.onInput();
+  }
+
+  // --- Custom Color Picker Actions ---
+  toggleTextColorPicker() {
+    this.showTextColorPicker = !this.showTextColorPicker;
+    this.showBgColorPicker = false;
+  }
+
+  toggleBgColorPicker() {
+    this.showBgColorPicker = !this.showBgColorPicker;
+    this.showTextColorPicker = false;
+  }
+
+  setTextColor(color: string, event: MouseEvent) {
+    event.stopPropagation();
+    this.execCommand('foreColor', color);
+    this.showTextColorPicker = false;
+  }
+
+  setBgColor(color: string, event: MouseEvent) {
+    event.stopPropagation();
+    this.bgColor(color);
+    this.showBgColorPicker = false;
+  }
+  // -----------------------------------
 
   align(alignment: 'Left' | 'Center' | 'Right' | 'Full') {
     this.editorRef.nativeElement.focus();
@@ -345,8 +476,16 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
   @HostListener('document:mousedown', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
+    
+    // Deselect image if clicking outside
     if (this.selectedImage && !this.editorRef.nativeElement.contains(target) && !target.classList.contains('resizer-handle')) {
       this.selectedImage = null;
+    }
+    
+    // Close color pickers if clicking outside
+    if (!target.closest('.color-picker-container')) {
+      this.showTextColorPicker = false;
+      this.showBgColorPicker = false;
     }
   }
 
@@ -389,8 +528,6 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
       newWidth = this.startWidth + dx;
     } else if (this.resizeHandle === 'tr') {
       newWidth = this.startWidth + dx;
-      // Tricky: we are anchored at bottom-left, but resizing TR means dragging TR.
-      // Top changes, Right changes. Simplest approach for inline resizing is just changing width/height.
     } else if (this.resizeHandle === 'bl') {
       newWidth = this.startWidth - dx;
     } else if (this.resizeHandle === 'tl') {
