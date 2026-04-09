@@ -19,7 +19,7 @@ export interface ImageUploadConfig {
 }
 
 @Component({
-  selector: 'lib-ngx-rwriter',
+  selector: 'ngx-rwriter',
   standalone: true,
   imports: [CommonModule],
   providers: [
@@ -30,7 +30,7 @@ export interface ImageUploadConfig {
     }
   ],
   template: `
-    <div class="rwriter-container">
+    <div class="rwriter-container" [class.dark-theme]="theme === 'dark'">
       <div class="rwriter-toolbar">
         <!-- Formatting -->
         <select (change)="execCommand('formatBlock', $any($event.target).value)" [title]="translations.paragraphStyle">
@@ -293,11 +293,52 @@ export interface ImageUploadConfig {
     .resizer-handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
     .resizer-handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
     .resizer-handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    
+    /* Dark Theme */
+    .rwriter-container.dark-theme {
+      background: #1e1e1e;
+      border-color: #444;
+      color: #e0e0e0;
+    }
+    .rwriter-container.dark-theme .rwriter-toolbar {
+      background: #252526;
+      border-bottom-color: #444;
+    }
+    .rwriter-container.dark-theme .rwriter-toolbar button,
+    .rwriter-container.dark-theme .rwriter-toolbar select,
+    .rwriter-container.dark-theme .image-upload-label,
+    .rwriter-container.dark-theme .color-picker-label {
+      background: #333;
+      border-color: #555;
+      color: #e0e0e0;
+    }
+    .rwriter-container.dark-theme .rwriter-toolbar button:hover,
+    .rwriter-container.dark-theme .rwriter-toolbar select:hover,
+    .rwriter-container.dark-theme .image-upload-label:hover,
+    .rwriter-container.dark-theme .color-picker-label:hover {
+      background: #444;
+      border-color: #666;
+    }
+    .rwriter-container.dark-theme .rwriter-toolbar .separator {
+      background: #444;
+    }
+    .rwriter-container.dark-theme .color-palette {
+      background: #252526;
+      border-color: #444;
+    }
+    .rwriter-container.dark-theme .color-swatch {
+      border-color: rgba(255,255,255,0.1);
+    }
+    .rwriter-container.dark-theme .clear-bg {
+      color: #aaa;
+      background: #333;
+    }
   `]
 })
 export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
   @ViewChild('editor', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
   
+  @Input() theme: 'light' | 'dark' = 'light';
   @Input() imageConfig: ImageUploadConfig = { mode: 'base64' };
   @Input() translations: RwriterTranslations = RW_EN;
 

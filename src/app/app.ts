@@ -7,23 +7,26 @@ import { NgxRwriter, RW_EN, RW_RU, RW_KK, RwriterTranslations } from 'ngx-rwrite
   standalone: true,
   imports: [FormsModule, NgxRwriter],
   template: `
-    <div style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: sans-serif;">
+    <div style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: sans-serif;" [style.color]="isDark() ? '#e0e0e0' : '#000'" [style.background]="isDark() ? '#121212' : '#fff'">
       <h2>ngx-rwriter Demo</h2>
       <p>This is a rich text editor built natively in Angular 21.</p>
       
-      <!-- Language Switcher -->
-      <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center;">
+      <!-- Controls -->
+      <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
         <strong>Language:</strong>
         <button (click)="setLang(RW_EN)">English</button>
         <button (click)="setLang(RW_RU)">Русский</button>
         <button (click)="setLang(RW_KK)">Қазақша</button>
+        
+        <strong style="margin-left: 20px;">Theme:</strong>
+        <button (click)="toggleTheme()">Toggle Dark Mode</button>
       </div>
 
-      <lib-ngx-rwriter [(ngModel)]="content" [translations]="currentTranslations"></lib-ngx-rwriter>
+      <ngx-rwriter [(ngModel)]="content" [translations]="currentTranslations" [theme]="isDark() ? 'dark' : 'light'"></ngx-rwriter>
 
       <div style="margin-top: 40px;">
         <h3>Raw HTML Output:</h3>
-        <pre style="background: #f4f4f4; padding: 15px; border-radius: 6px; overflow-x: auto;">{{ content() }}</pre>
+        <pre [style.background]="isDark() ? '#2d2d2d' : '#f4f4f4'" style="padding: 15px; border-radius: 6px; overflow-x: auto;">{{ content() }}</pre>
       </div>
     </div>
   `
@@ -31,6 +34,7 @@ import { NgxRwriter, RW_EN, RW_RU, RW_KK, RwriterTranslations } from 'ngx-rwrite
 export class App {
   protected readonly title = signal('workspace');
   content = signal('<p>Start typing or add an image...</p>');
+  isDark = signal(false);
   
   // Expose the imported constants to the template
   readonly RW_EN = RW_EN;
@@ -42,4 +46,10 @@ export class App {
   setLang(lang: RwriterTranslations) {
     this.currentTranslations = lang;
   }
+
+  toggleTheme() {
+    this.isDark.set(!this.isDark());
+    document.body.style.background = this.isDark() ? '#121212' : '#fff';
+  }
 }
+

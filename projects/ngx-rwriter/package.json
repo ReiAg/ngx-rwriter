@@ -1,8 +1,13 @@
 {
-   "name": "ngx-rwriter",
+  "name": "@reiagaru/ngx-rwriter",
   "version": "1.0.1",
   "description": "A powerful, lightweight, and modern Rich Text Editor component for Angular 21+ with native support for images, alignment, lists, color pickers, and translations.",
-  "keywords": ["angular", "ngx", "writer", "editor"],
+  "keywords": [
+    "angular",
+    "ngx",
+    "writer",
+    "editor"
+  ],
   "homepage": "https://github.com/ReiAg/ngx-rwriter#readme",
   "bugs": {
     "url": "https://github.com/ReiAg/ngx-rwriter/issues"
@@ -10,6 +15,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ReiAg/ngx-rwriter.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "author": "Rei Agaru <reiagaru@gmail.com>",
