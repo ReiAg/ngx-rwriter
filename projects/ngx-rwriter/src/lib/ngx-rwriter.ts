@@ -7,7 +7,11 @@ import {
   ViewChild,
   forwardRef,
   HostListener,
-  AfterViewInit
+  AfterViewInit,
+  ChangeDetectorRef,
+  OnInit,
+  OnChanges,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
@@ -342,10 +346,43 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit {
   @Input() imageConfig: ImageUploadConfig = { mode: 'base64' };
   @Input() translations: RwriterTranslations = RW_EN;
 
-  get isDarkTheme(): boolean {
-    if (this.theme === 'dark') return true;
-    if (this.theme === 'light') return false;
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  isDarkTheme = false;
+  private mediaQueryList: MediaQueryList | null = null;
+  private themeChangeListener = (e: MediaQueryListEvent) => {
+    if (this.theme === 'auto') {
+      this.isDarkTheme = e.matches;
+      this.cdr.detectChanges();
+    }
+  };
+
+  constructor(private cdr: ChangeDetectorRef) {}
+
+  ngOnInit() {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+      this.mediaQueryList.addEventListener('change', this.themeChangeListener);
+    }
+    this.updateThemeState();
+  }
+
+  ngOnChanges() {
+    this.updateThemeState();
+  }
+
+  ngOnDestroy() {
+    if (this.mediaQueryList) {
+      this.mediaQueryList.removeEventListener('change', this.themeChangeListener);
+    }
+  }
+
+  private updateThemeState() {
+    if (this.theme === 'dark') {
+      this.isDarkTheme = true;
+    } else if (this.theme === 'light') {
+      this.isDarkTheme = false;
+    } else if (this.mediaQueryList) {
+      this.isDarkTheme = this.mediaQueryList.matches;
+    }
   }
 
   private onChange = (value: string) => {};
