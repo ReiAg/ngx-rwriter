@@ -124,6 +124,40 @@ export interface ImageUploadConfig {
         <span class="separator"></span>
 
         <!-- Insert -->
+        <div class="table-picker-container" (mouseenter)="showTablePalette = true" (mouseleave)="showTablePalette = false">
+          <button type="button" (click)="insertTable()" [title]="translations.insertTable">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="12" y1="3" x2="12" y2="21"></line>
+            </svg>
+          </button>
+          <div class="table-palette" *ngIf="showTablePalette">
+            <div class="table-grid-header">
+              <span *ngIf="hoveredGridRow && hoveredGridCol">{{hoveredGridRow}} x {{hoveredGridCol}}</span>
+              <span *ngIf="!hoveredGridRow || !hoveredGridCol">{{translations.table}}</span>
+            </div>
+            <div class="table-grid" (mouseleave)="hoveredGridRow = 0; hoveredGridCol = 0">
+              <div *ngFor="let r of gridRows" class="table-grid-row">
+                <div *ngFor="let c of gridCols" 
+                     class="table-grid-cell"
+                     [class.active]="r <= hoveredGridRow && c <= hoveredGridCol"
+                     (mouseenter)="hoveredGridRow = r; hoveredGridCol = c"
+                     (click)="insertTableGrid(r, c)">
+                </div>
+              </div>
+            </div>
+            <div class="table-custom-inputs">
+              <div class="custom-inputs-row">
+                <input type="number" min="1" [value]="customTableRows" (input)="customTableRows = $any($event.target).valueAsNumber" [title]="translations.tableRows">
+                <span>x</span>
+                <input type="number" min="1" [value]="customTableCols" (input)="customTableCols = $any($event.target).valueAsNumber" [title]="translations.tableCols">
+              </div>
+              <button type="button" class="insert-btn" (click)="insertCustomTable()">{{translations.insert}}</button>
+            </div>
+          </div>
+        </div>
+        
         <button type="button" (click)="insertLink()" [title]="translations.insertLink">&#128279; {{ translations.link }}</button>
         
         <label class="image-upload-label" [title]="translations.insertImage">
@@ -136,11 +170,14 @@ export interface ImageUploadConfig {
         <div 
           #editor 
           class="rwriter-editor rwriter-content" 
+          [style.height]="height"
+          [style.minHeight]="height ? 'auto' : '300px'"
           contenteditable="true" 
           (input)="onInput()" 
           (blur)="onTouched()"
           (click)="onEditorClick($event)"
-          (keydown)="onEditorKeydown($event)">
+          (keydown)="onEditorKeydown($event)"
+          (scroll)="updateResizerPosition()">
         </div>
 
         <!-- Image Resize Overlay -->
@@ -160,52 +197,70 @@ export interface ImageUploadConfig {
   `,
   styles: [`
     .rwriter-container {
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #ffffff;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .rwriter-container:focus-within {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
     .rwriter-container .rwriter-toolbar {
-      padding: 10px;
-      background: #fdfdfd;
-      border-bottom: 1px solid #e0e0e0;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
       align-items: center;
-      border-top-left-radius: 6px;
-      border-top-right-radius: 6px;
     }
     .rwriter-container .rwriter-toolbar button, 
     .rwriter-container .rwriter-toolbar select, 
     .rwriter-container .image-upload-label {
       padding: 6px 10px;
-      background: #fff !important;
-      border: 1px solid #dcdcdc !important;
-      border-style: solid !important;
-      border-radius: 4px;
+      background: transparent !important;
+      border: 1px solid transparent !important;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 13px;
-      color: #333 !important;
+      font-weight: 500;
+      color: #475569 !important;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s, border-color 0.2s;
+      transition: all 0.2s ease-in-out;
+    }
+    .rwriter-container .rwriter-toolbar select {
+      appearance: none;
+      padding-right: 26px;
+      background-color: #ffffff !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 8px center !important;
+      background-size: 14px !important;
     }
     .rwriter-container .rwriter-toolbar button:hover, 
-    .rwriter-container .rwriter-toolbar select:hover, 
     .rwriter-container .image-upload-label:hover, 
     .rwriter-container .color-picker-label:hover {
-      background: #f0f0f0 !important;
-      border-color: #bbb !important;
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    .rwriter-container .rwriter-toolbar select:hover {
+      border-color: #94a3b8 !important;
+      background-color: #f8fafc !important;
     }
     .rwriter-container .rwriter-toolbar .separator {
       width: 1px;
-      height: 24px;
-      background: #e0e0e0;
+      height: 20px;
+      background-color: #cbd5e1;
       margin: 0 4px;
       display: inline-block;
     }
@@ -216,118 +271,252 @@ export interface ImageUploadConfig {
     }
     .rwriter-container .color-picker-label {
       padding: 6px 8px;
-      background: #fff;
-      border: 1px solid #dcdcdc;
-      border-style: solid;
-      border-radius: 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       font-size: 14px;
-      transition: background 0.2s, border-color 0.2s;
+      transition: all 0.2s ease-in-out;
     }
     .rwriter-container .color-palette {
       position: absolute;
       top: 100%;
       left: 0;
-      margin-top: 4px;
-      background: #fff;
-      border: 1px solid #ccc;
-      border-style: solid;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      border-radius: 4px;
-      padding: 8px;
+      margin-top: 6px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      padding: 10px;
       z-index: 100;
       display: grid;
-      grid-template-columns: repeat(10, 20px);
-      gap: 2px;
+      grid-template-columns: repeat(10, 22px);
+      gap: 4px;
       width: max-content;
+      animation: fadeIn 0.15s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .rwriter-container .color-swatch {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       cursor: pointer;
       border: 1px solid rgba(0,0,0,0.1);
-      border-style: solid;
-      box-sizing: border-box;
-      border-radius: 2px;
+      border-radius: 4px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
     .rwriter-container .color-swatch:hover {
       transform: scale(1.15);
-      border-color: #000;
+      box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #3b82f6;
       z-index: 2;
     }
     .rwriter-container .clear-bg {
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 14px;
+      color: #64748b;
+      background: #f1f5f9;
+      grid-column: span 10;
+      width: auto;
+      height: 28px;
+      margin-top: 4px;
+      border-radius: 4px;
+      border: 1px dashed #cbd5e1;
+    }
+    .rwriter-container .clear-bg:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .rwriter-container .table-picker-container {
+      position: relative;
+      display: inline-flex;
+    }
+    .rwriter-container .table-palette {
+      display: flex;
+      flex-direction: column;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 6px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      padding: 12px;
+      z-index: 100;
+      width: max-content;
+      animation: fadeIn 0.15s ease-out;
+    }
+    .rwriter-container .table-palette::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: transparent;
+    }
+    .rwriter-container .table-grid-header {
       font-size: 12px;
-      color: #666;
-      background: #f9f9f9;
+      color: #64748b;
+      margin-bottom: 8px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .rwriter-container .table-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      margin-bottom: 12px;
+    }
+    .rwriter-container .table-grid-row {
+      display: flex;
+      gap: 3px;
+    }
+    .rwriter-container .table-grid-cell {
+      width: 18px;
+      height: 18px;
+      border: 1px solid #cbd5e1;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+    .rwriter-container .table-grid-cell.active {
+      background-color: #bfdbfe;
+      border-color: #3b82f6;
+    }
+    .rwriter-container .table-custom-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 12px;
+    }
+    .rwriter-container .custom-inputs-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #475569;
+    }
+    .rwriter-container .custom-inputs-row input {
+      width: 40px;
+      padding: 4px;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 13px;
+      color: #334155;
+      outline: none;
+    }
+    .rwriter-container .custom-inputs-row input:focus {
+      border-color: #3b82f6;
+    }
+    .rwriter-container .table-palette .insert-btn {
+      background-color: #3b82f6 !important;
+      color: #ffffff !important;
+      border: none !important;
+      padding: 6px !important;
+      border-radius: 4px !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      font-size: 13px;
+    }
+    .rwriter-container .table-palette .insert-btn:hover {
+      background-color: #2563eb !important;
     }
 
     .rwriter-container .editor-wrapper {
       position: relative;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
     .rwriter-container .rwriter-editor, .rwriter-content {
-      min-height: 1em;
       outline: none;
       line-height: 1.6;
       font-size: 16px;
       text-align: initial;
-      color: inherit;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #334155;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     }
     .rwriter-container .rwriter-editor {
       min-height: 300px;
-      padding: 16px;
+      padding: 20px 24px;
       overflow-y: auto;
+      flex-grow: 1;
     }
 
     /* Isolation Styles to counteract Tailwind Preflight */
-    .rwriter-container .rwriter-editor p, .rwriter-content p { margin: 0 0 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h1, .rwriter-content h1 { font-size: 2em !important; font-weight: bold !important; margin: 0.67em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h2, .rwriter-content h2 { font-size: 1.5em !important; font-weight: bold !important; margin: 0.83em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h3, .rwriter-content h3 { font-size: 1.17em !important; font-weight: bold !important; margin: 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h4, .rwriter-content h4 { font-size: 1em !important; font-weight: bold !important; margin: 1.33em 0 !important; display: block !important; }
+    .rwriter-container .rwriter-editor p, .rwriter-content p { margin: 0 0 1.25em 0 !important; display: block !important; }
+    .rwriter-container .rwriter-editor h1, .rwriter-content h1 { font-size: 2.25em !important; font-weight: 700 !important; margin: 0.75em 0 !important; display: block !important; line-height: 1.2 !important; color: #0f172a !important; }
+    .rwriter-container .rwriter-editor h2, .rwriter-content h2 { font-size: 1.8em !important; font-weight: 700 !important; margin: 0.8em 0 !important; display: block !important; line-height: 1.3 !important; color: #1e293b !important; }
+    .rwriter-container .rwriter-editor h3, .rwriter-content h3 { font-size: 1.5em !important; font-weight: 600 !important; margin: 0.85em 0 !important; display: block !important; line-height: 1.4 !important; color: #334155 !important; }
+    .rwriter-container .rwriter-editor h4, .rwriter-content h4 { font-size: 1.25em !important; font-weight: 600 !important; margin: 0.9em 0 !important; display: block !important; line-height: 1.5 !important; color: #475569 !important; }
     
-    .rwriter-container .rwriter-editor ul, .rwriter-content ul { list-style-type: disc !important; padding-left: 40px !important; margin: 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor ol, .rwriter-content ol { list-style-type: decimal !important; padding-left: 40px !important; margin: 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor li, .rwriter-content li { display: list-item !important; }
+    .rwriter-container .rwriter-editor ul, .rwriter-content ul { list-style-type: disc !important; padding-left: 1.5em !important; margin: 1em 0 !important; display: block !important; }
+    .rwriter-container .rwriter-editor ol, .rwriter-content ol { list-style-type: decimal !important; padding-left: 1.5em !important; margin: 1em 0 !important; display: block !important; }
+    .rwriter-container .rwriter-editor li, .rwriter-content li { display: list-item !important; margin-bottom: 0.25em !important; }
     
-    .rwriter-container .rwriter-editor blockquote, .rwriter-content blockquote { margin: 1em 40px !important; }
-    .rwriter-container .rwriter-editor b, .rwriter-container .rwriter-editor strong, .rwriter-content b, .rwriter-content strong { font-weight: bold !important; display: inline !important; }
+    .rwriter-container .rwriter-editor blockquote, .rwriter-content blockquote { margin: 1.5em 0 !important; padding-left: 1em !important; border-left: 4px solid #e2e8f0 !important; color: #64748b !important; font-style: italic !important; }
+    .rwriter-container .rwriter-editor b, .rwriter-container .rwriter-editor strong, .rwriter-content b, .rwriter-content strong { font-weight: 600 !important; display: inline !important; color: inherit !important; }
     .rwriter-container .rwriter-editor i, .rwriter-container .rwriter-editor em, .rwriter-content i, .rwriter-content em { font-style: italic !important; display: inline !important; }
-    .rwriter-container .rwriter-editor u, .rwriter-content u { text-decoration: underline !important; display: inline !important; }
+    .rwriter-container .rwriter-editor u, .rwriter-content u { text-decoration: underline !important; display: inline !important; text-underline-offset: 2px !important; }
+    
+    .rwriter-container .rwriter-editor table, .rwriter-content table { border-collapse: collapse; width: 100%; margin: 1.25em 0 !important; }
+    .rwriter-container .rwriter-editor table td, .rwriter-container .rwriter-editor table th, .rwriter-content table td, .rwriter-content table th { border: 1px solid #cbd5e1 !important; padding: 8px 12px !important; }
+    .rwriter-container.dark-theme .rwriter-editor table td, .rwriter-container.dark-theme .rwriter-editor table th, .dark-theme.rwriter-content table td, .dark-theme.rwriter-content table th { border-color: #475569 !important; }
     
     /* Ensure background-color (hilite) is visible and not overridden */
-    .rwriter-container .rwriter-editor [style*="background-color"], .rwriter-content [style*="background-color"] {
+    .rwriter-container .rwriter-editor [style*='background-color'], .rwriter-content [style*='background-color'] {
       display: inline !important;
+      border-radius: 2px;
+      padding: 0 2px;
     }
 
     .rwriter-container .rwriter-editor img, .rwriter-content img {
       max-width: 100%;
+      height: auto;
       cursor: pointer;
-      transition: outline 0.1s;
+      border-radius: 4px;
+      transition: box-shadow 0.2s;
+    }
+    .rwriter-container .rwriter-editor img:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
     /* Resizer overlay */
     .rwriter-container .image-resizer-overlay {
       position: absolute;
-      border: 2px dashed #007bff;
+      border: 2px solid #3b82f6;
       pointer-events: none;
       box-sizing: border-box;
       z-index: 10;
+      border-radius: 4px;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
     }
     .rwriter-container .resizer-handle {
       position: absolute;
       width: 12px;
       height: 12px;
-      background: #fff;
-      border: 2px solid #007bff;
+      background: #ffffff;
+      border: 2px solid #3b82f6;
       border-radius: 50%;
       pointer-events: auto;
       box-sizing: border-box;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
     .rwriter-container .resizer-handle.top-left { top: -6px; left: -6px; cursor: nwse-resize; }
     .rwriter-container .resizer-handle.top-right { top: -6px; right: -6px; cursor: nesw-resize; }
@@ -336,47 +525,74 @@ export interface ImageUploadConfig {
     
     /* Dark Theme */
     .rwriter-container.dark-theme {
-      background: #1e1e1e !important;
-      border-color: #444 !important;
-      color: #e0e0e0 !important;
+      background: #0f172a !important;
+      border-color: #334155 !important;
+      color: #e2e8f0 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+    }
+    .rwriter-container.dark-theme:focus-within {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
     }
     .rwriter-container.dark-theme .rwriter-toolbar {
-      background: #252526 !important;
-      border-bottom-color: #444 !important;
+      background: #1e293b !important;
+      border-bottom-color: #334155 !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar button,
     .rwriter-container.dark-theme .rwriter-toolbar select,
     .rwriter-container.dark-theme .image-upload-label,
     .rwriter-container.dark-theme .color-picker-label {
-      background: #333 !important;
-      border-color: #555 !important;
-      color: #e0e0e0 !important;
+      background-color: transparent !important;
+      border-color: transparent !important;
+      color: #cbd5e1 !important;
+    }
+    .rwriter-container.dark-theme .rwriter-toolbar select {
+      background-color: #0f172a !important;
+      border-color: #475569 !important;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar button:hover,
-    .rwriter-container.dark-theme .rwriter-toolbar select:hover,
     .rwriter-container.dark-theme .image-upload-label:hover,
     .rwriter-container.dark-theme .color-picker-label:hover {
-      background: #444 !important;
-      border-color: #666 !important;
+      background-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    .rwriter-container.dark-theme .rwriter-toolbar select:hover {
+      border-color: #64748b !important;
+      background-color: #1e293b !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar .separator {
-      background: #444 !important;
+      background-color: #475569 !important;
     }
     .rwriter-container.dark-theme .color-palette {
-      background: #252526 !important;
-      border-color: #444 !important;
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
     }
     .rwriter-container.dark-theme .color-swatch {
       border-color: rgba(255,255,255,0.1) !important;
     }
+    .rwriter-container.dark-theme .color-swatch:hover {
+      box-shadow: 0 0 0 2px #1e293b, 0 0 0 4px #3b82f6;
+    }
     .rwriter-container.dark-theme .clear-bg {
-      color: #aaa !important;
-      background: #333 !important;
+      color: #94a3b8 !important;
+      background: #0f172a !important;
+      border-color: #475569 !important;
+    }
+    .rwriter-container.dark-theme .clear-bg:hover {
+      background: #334155 !important;
+      color: #f8fafc !important;
     }
     .rwriter-container.dark-theme .rwriter-content,
     .dark-theme.rwriter-content {
-      color: #e0e0e0 !important;
+      color: #e2e8f0 !important;
     }
+    .rwriter-container.dark-theme .rwriter-editor h1, .dark-theme.rwriter-content h1 { color: #f8fafc !important; }
+    .rwriter-container.dark-theme .rwriter-editor h2, .dark-theme.rwriter-content h2 { color: #f1f5f9 !important; }
+    .rwriter-container.dark-theme .rwriter-editor h3, .dark-theme.rwriter-content h3 { color: #e2e8f0 !important; }
+    .rwriter-container.dark-theme .rwriter-editor h4, .dark-theme.rwriter-content h4 { color: #cbd5e1 !important; }
+    .rwriter-container.dark-theme .rwriter-editor blockquote, .dark-theme.rwriter-content blockquote { border-left-color: #475569 !important; color: #94a3b8 !important; }
   `]
 })
 export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, OnChanges, OnDestroy {
@@ -385,6 +601,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   @Input() theme: 'auto' | 'light' | 'dark' = 'auto';
   @Input() imageConfig: ImageUploadConfig = { mode: 'base64' };
   @Input() translations: RwriterTranslations = RW_EN;
+  @Input() height?: string;
 
   isDarkTheme = false;
   private mediaQueryList: MediaQueryList | null = null;
@@ -441,6 +658,15 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
     '#cc4125', '#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0',
     '#a61c00', '#cc0000', '#e69138', '#f1c232', '#6aa84f', '#45818e', '#3c78d8', '#3d85c6', '#674ea7', '#a64d79'
   ];
+
+  // Table Picker State
+  showTablePalette = false;
+  gridRows = [1, 2, 3, 4, 5, 6];
+  gridCols = [1, 2, 3, 4, 5, 6];
+  hoveredGridRow = 0;
+  hoveredGridCol = 0;
+  customTableRows = 2;
+  customTableCols = 2;
 
   // Image Resizer State
   selectedImage: HTMLImageElement | null = null;
@@ -555,6 +781,38 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
       document.execCommand('justify' + alignment, false, '');
       this.onInput();
     }
+  }
+
+  insertTableGrid(rows: number, cols: number) {
+    this.insertTableHtml(rows, cols);
+  }
+
+  insertTable() {
+    this.insertTableHtml(2, 2);
+  }
+
+  insertCustomTable() {
+    if (this.customTableRows > 0 && this.customTableCols > 0) {
+      this.insertTableHtml(this.customTableRows, this.customTableCols);
+    }
+  }
+
+  private insertTableHtml(rows: number, cols: number) {
+    this.showTablePalette = false;
+    this.hoveredGridRow = 0;
+    this.hoveredGridCol = 0;
+    
+    this.editorRef.nativeElement.focus();
+    let html = '<table class="rwriter-table"><tbody>';
+    for (let r = 0; r < rows; r++) {
+      html += '<tr>';
+      for (let c = 0; c < cols; c++) {
+        html += '<td><br></td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table><p><br></p>';
+    this.execCommand('insertHTML', html);
   }
 
   insertLink() {

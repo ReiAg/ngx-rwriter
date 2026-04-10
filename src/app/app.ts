@@ -22,7 +22,7 @@ import { NgxRwriter, NgxRwriterViewer, RW_EN, RW_RU, RW_KK, RwriterTranslations 
         <button (click)="toggleTheme()">Toggle Dark Mode</button>
       </div>
 
-      <ngx-rwriter [(ngModel)]="content" [translations]="currentTranslations" [theme]="isDark() ? 'dark' : 'light'"></ngx-rwriter>
+      <ngx-rwriter [(ngModel)]="content" [translations]="currentTranslations" [theme]="isDark() ? 'dark' : 'light'" height="300px"></ngx-rwriter>
 
       <div style="margin-top: 40px;">
         <h3>Viewer Output (Final Result):</h3>

@@ -23,6 +23,11 @@ export interface RwriterTranslations {
   insertImage: string;
   image: string;
   enterLinkUrl: string;
+  insertTable: string;
+  table: string;
+  tableRows: string;
+  tableCols: string;
+  insert: string;
 }
 
 export const RW_EN: RwriterTranslations = {
@@ -49,7 +54,12 @@ export const RW_EN: RwriterTranslations = {
   link: 'Link',
   insertImage: 'Insert Image',
   image: 'Image',
-  enterLinkUrl: 'Enter link URL:'
+  enterLinkUrl: 'Enter link URL:',
+  insertTable: 'Insert Table',
+  table: 'Table',
+  tableRows: 'Rows:',
+  tableCols: 'Columns:',
+  insert: 'Insert'
 };
 
 export const RW_RU: RwriterTranslations = {
@@ -76,7 +86,12 @@ export const RW_RU: RwriterTranslations = {
   link: 'Ссылка',
   insertImage: 'Вставить изображение',
   image: 'Изображение',
-  enterLinkUrl: 'Введите URL ссылки:'
+  enterLinkUrl: 'Введите URL ссылки:',
+  insertTable: 'Вставить таблицу',
+  table: 'Таблица',
+  tableRows: 'Строки:',
+  tableCols: 'Столбцы:',
+  insert: 'Вставить'
 };
 
 export const RW_KK: RwriterTranslations = {
@@ -103,5 +118,10 @@ export const RW_KK: RwriterTranslations = {
   link: 'Сілтеме',
   insertImage: 'Сурет кірістіру',
   image: 'Сурет',
-  enterLinkUrl: 'Сілтеме URL енгізіңіз:'
+  enterLinkUrl: 'Сілтеме URL енгізіңіз:',
+  insertTable: 'Кесте кірістіру',
+  table: 'Кесте',
+  tableRows: 'Жолдар:',
+  tableCols: 'Бағандар:',
+  insert: 'Кірістіру'
 };
