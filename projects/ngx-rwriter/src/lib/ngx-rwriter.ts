@@ -135,7 +135,7 @@ export interface ImageUploadConfig {
       <div class="editor-wrapper">
         <div 
           #editor 
-          class="rwriter-editor" 
+          class="rwriter-editor rwriter-content" 
           contenteditable="true" 
           (input)="onInput()" 
           (blur)="onTouched()"
@@ -158,6 +158,7 @@ export interface ImageUploadConfig {
       </div>
     </div>
   `,
+  styleUrls: ['../assets/rwriter-styles.css'],
   styles: [`
     .rwriter-container {
       border: 1px solid #ccc;
@@ -269,45 +270,10 @@ export interface ImageUploadConfig {
     .rwriter-container .editor-wrapper {
       position: relative;
     }
-    .rwriter-container .rwriter-editor, .rwriter-content {
-      min-height: 1em;
-      outline: none;
-      line-height: 1.6;
-      font-size: 16px;
-      text-align: initial;
-      color: inherit;
-    }
     .rwriter-container .rwriter-editor {
       min-height: 300px;
       padding: 16px;
       overflow-y: auto;
-    }
-
-    /* Isolation Styles to counteract Tailwind Preflight */
-    .rwriter-container .rwriter-editor p, .rwriter-content p { margin: 0 0 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h1, .rwriter-content h1 { font-size: 2em !important; font-weight: bold !important; margin: 0.67em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h2, .rwriter-content h2 { font-size: 1.5em !important; font-weight: bold !important; margin: 0.83em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h3, .rwriter-content h3 { font-size: 1.17em !important; font-weight: bold !important; margin: 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor h4, .rwriter-content h4 { font-size: 1em !important; font-weight: bold !important; margin: 1.33em 0 !important; display: block !important; }
-    
-    .rwriter-container .rwriter-editor ul, .rwriter-content ul { list-style-type: disc !important; padding-left: 40px !important; margin: 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor ol, .rwriter-content ol { list-style-type: decimal !important; padding-left: 40px !important; margin: 1em 0 !important; display: block !important; }
-    .rwriter-container .rwriter-editor li, .rwriter-content li { display: list-item !important; }
-    
-    .rwriter-container .rwriter-editor blockquote, .rwriter-content blockquote { margin: 1em 40px !important; }
-    .rwriter-container .rwriter-editor b, .rwriter-container .rwriter-editor strong, .rwriter-content b, .rwriter-content strong { font-weight: bold !important; display: inline !important; }
-    .rwriter-container .rwriter-editor i, .rwriter-container .rwriter-editor em, .rwriter-content i, .rwriter-content em { font-style: italic !important; display: inline !important; }
-    .rwriter-container .rwriter-editor u, .rwriter-content u { text-decoration: underline !important; display: inline !important; }
-    
-    /* Ensure background-color (hilite) is visible and not overridden */
-    .rwriter-container .rwriter-editor [style*="background-color"], .rwriter-content [style*="background-color"] {
-      display: inline !important;
-    }
-
-    .rwriter-container .rwriter-editor img, .rwriter-content img {
-      max-width: 100%;
-      cursor: pointer;
-      transition: outline 0.1s;
     }
     
     /* Resizer overlay */
@@ -337,7 +303,6 @@ export interface ImageUploadConfig {
     .rwriter-container.dark-theme {
       background: #1e1e1e !important;
       border-color: #444 !important;
-      color: #e0e0e0 !important;
     }
     .rwriter-container.dark-theme .rwriter-toolbar {
       background: #252526 !important;
@@ -462,14 +427,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
 
   writeValue(value: string): void {
     if (this.editorRef) {
-      let content = value || '<p><br></p>';
-      
-      // Strip the auto-wrapper if it exists to prevent nesting inside the editor
-      if (content.startsWith('<div class="rwriter-content">') && content.endsWith('</div>')) {
-        content = content.substring(29, content.length - 6);
-      }
-      
-      this.editorRef.nativeElement.innerHTML = content;
+      this.editorRef.nativeElement.innerHTML = value || '<p><br></p>';
     }
   }
 
@@ -488,9 +446,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   }
 
   onInput() {
-    const innerHTML = this.editorRef.nativeElement.innerHTML;
-    // Auto-wrap the output so it's ready for rendering anywhere
-    this.onChange(`<div class="rwriter-content">${innerHTML}</div>`);
+    this.onChange(this.editorRef.nativeElement.innerHTML);
     this.updateResizerPosition(); 
   }
 

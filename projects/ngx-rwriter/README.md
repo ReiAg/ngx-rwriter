@@ -43,6 +43,44 @@ export class MyComponent {
 }
 ```
 
+## Rendering Output (Fixing Broken Styles)
+
+Rich text editors generate raw HTML tags (like `<p>`, `<ul>`, `<h1>`) that often lose their default styling when placed in an Angular app—especially if you use a framework like Tailwind CSS that aggressively resets defaults (Preflight).
+
+`ngx-rwriter` provides two ways to safely render your saved HTML back to the screen:
+
+### Option A: The Viewer Component (Recommended)
+Import the `<ngx-rwriter-viewer>` standalone component. It automatically isolates the HTML and applies the correct typography rules.
+
+```typescript
+import { NgxRwriterViewer } from 'ngx-rwriter';
+
+@Component({
+  standalone: true,
+  imports: [NgxRwriterViewer],
+  template: `
+    <!-- Just pass the raw HTML string to the [content] input -->
+    <ngx-rwriter-viewer [content]="savedNewsHtml" theme="light"></ngx-rwriter-viewer>
+  `
+})
+export class NewsArticleComponent {
+  savedNewsHtml = '<h1>My Article</h1><p>...</p>';
+}
+```
+
+### Option B: Global CSS Import
+If you prefer to render the `[innerHTML]` yourself, you must wrap it in a `.rwriter-content` class and import the library's CSS file into your global stylesheet (e.g., `styles.scss` or `angular.json`).
+
+```css
+/* styles.css */
+@import "@reiagaru/ngx-rwriter/assets/rwriter-styles.css";
+```
+
+```html
+<!-- your-component.html -->
+<div class="rwriter-content" [innerHTML]="savedNewsHtml"></div>
+```
+
 ## Documentation
 
 ### Inputs
