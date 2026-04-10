@@ -47,10 +47,12 @@ export class MyComponent {
 
 Rich text editors generate raw HTML tags (like `<p>`, `<ul>`, `<h1>`) that often lose their default styling when placed in an Angular app—especially if you use a framework like Tailwind CSS that aggressively resets defaults (Preflight).
 
-`ngx-rwriter` provides two ways to safely render your saved HTML back to the screen:
+Furthermore, Angular's default HTML sanitization strips out inline CSS styles (like text highlighting and background colors) used by the editor.
 
-### Option A: The Viewer Component (Recommended)
-Import the `<ngx-rwriter-viewer>` standalone component. It automatically isolates the HTML and applies the correct typography rules.
+To solve both of these issues, `ngx-rwriter` provides a dedicated standalone Viewer component. It automatically isolates the HTML from global CSS resets and securely renders the inline styles.
+
+### Using the Viewer Component
+Import the `<ngx-rwriter-viewer>` standalone component and pass your backend HTML string to the `[content]` input.
 
 ```typescript
 import { NgxRwriterViewer } from 'ngx-rwriter';
@@ -59,26 +61,16 @@ import { NgxRwriterViewer } from 'ngx-rwriter';
   standalone: true,
   imports: [NgxRwriterViewer],
   template: `
-    <!-- Just pass the raw HTML string to the [content] input -->
-    <ngx-rwriter-viewer [content]="savedNewsHtml" theme="light"></ngx-rwriter-viewer>
+    <ngx-rwriter-viewer 
+      [content]="savedNewsHtml" 
+      theme="light">
+    </ngx-rwriter-viewer>
   `
 })
 export class NewsArticleComponent {
-  savedNewsHtml = '<h1>My Article</h1><p>...</p>';
+  // This string from your backend will render safely with all colors and margins intact
+  savedNewsHtml = '<h1 style="background-color: yellow;">My Article</h1><p>...</p>';
 }
-```
-
-### Option B: Global CSS Import
-If you prefer to render the `[innerHTML]` yourself, you must wrap it in a `.rwriter-content` class and import the library's CSS file into your global stylesheet (e.g., `styles.scss` or `angular.json`).
-
-```css
-/* styles.css */
-@import "@reiagaru/ngx-rwriter/assets/rwriter-styles.css";
-```
-
-```html
-<!-- your-component.html -->
-<div class="rwriter-content" [innerHTML]="savedNewsHtml"></div>
 ```
 
 ## Documentation
