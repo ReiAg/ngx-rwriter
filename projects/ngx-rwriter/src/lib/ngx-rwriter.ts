@@ -205,7 +205,6 @@ export interface ImageUploadConfig {
       flex-direction: column;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
       transition: all 0.3s ease;
-      overflow: hidden;
     }
     .rwriter-container:focus-within {
       border-color: #3b82f6;
@@ -219,6 +218,8 @@ export interface ImageUploadConfig {
       flex-wrap: wrap;
       gap: 6px;
       align-items: center;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
     }
     .rwriter-container .rwriter-toolbar button, 
     .rwriter-container .rwriter-toolbar select, 
@@ -283,7 +284,7 @@ export interface ImageUploadConfig {
     .rwriter-container .color-palette {
       position: absolute;
       top: 100%;
-      left: 0;
+      right: 0;
       margin-top: 6px;
       background: #ffffff;
       border: 1px solid #e2e8f0;
@@ -344,7 +345,7 @@ export interface ImageUploadConfig {
       flex-direction: column;
       position: absolute;
       top: 100%;
-      left: 0;
+      right: 0;
       margin-top: 6px;
       background: #ffffff;
       border: 1px solid #e2e8f0;

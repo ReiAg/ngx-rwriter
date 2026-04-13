@@ -1,4 +1,4 @@
-import { Component, Input, ViewEncapsulation, inject } from '@angular/core';
+import { Component, Input, ViewEncapsulation, inject, OnInit, OnChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 
@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
   selector: 'ngx-rwriter-viewer',
   standalone: true,
   imports: [CommonModule],
-  template: `<div class="rwriter-content" [class.dark-theme]="theme === 'dark'" [innerHTML]="safeContent"></div>`,
+  template: `<div class="rwriter-content" [class.dark-theme]="isDarkTheme" [innerHTML]="safeContent"></div>`,
   encapsulation: ViewEncapsulation.None,
   styles: [`
     .rwriter-content {
@@ -44,13 +44,52 @@ import { CommonModule } from '@angular/common';
     .dark-theme.rwriter-content blockquote { border-left-color: #475569 !important; color: #94a3b8 !important; }
   `]
 })
-export class NgxRwriterViewer {
+export class NgxRwriterViewer implements OnInit, OnChanges, OnDestroy {
   @Input() content: string = '';
   @Input() theme: 'light' | 'dark' | 'auto' = 'auto';
 
+  isDarkTheme = false;
+  private mediaQueryList: MediaQueryList | null = null;
+  private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
+
+  private themeChangeListener = (e: MediaQueryListEvent) => {
+    if (this.theme === 'auto') {
+      this.isDarkTheme = e.matches;
+      this.cdr.detectChanges();
+    }
+  };
+
+  ngOnInit() {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+      this.mediaQueryList.addEventListener('change', this.themeChangeListener);
+    }
+    this.updateThemeState();
+  }
+
+  ngOnChanges() {
+    this.updateThemeState();
+  }
+
+  ngOnDestroy() {
+    if (this.mediaQueryList) {
+      this.mediaQueryList.removeEventListener('change', this.themeChangeListener);
+    }
+  }
+
+  private updateThemeState() {
+    if (this.theme === 'dark') {
+      this.isDarkTheme = true;
+    } else if (this.theme === 'light') {
+      this.isDarkTheme = false;
+    } else if (this.mediaQueryList) {
+      this.isDarkTheme = this.mediaQueryList.matches;
+    }
+  }
 
   get safeContent(): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(this.content || '');
   }
 }
+
