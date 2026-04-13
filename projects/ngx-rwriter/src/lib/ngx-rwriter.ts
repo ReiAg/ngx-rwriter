@@ -15,7 +15,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
+import { NG_VALUE_ACCESSOR, ControlValueAccessor, FormsModule } from '@angular/forms';
 import { RwriterTranslations, RW_EN } from './rwriter-translations';
 
 export interface ImageUploadConfig {
@@ -26,7 +26,7 @@ export interface ImageUploadConfig {
 @Component({
   selector: 'ngx-rwriter',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   encapsulation: ViewEncapsulation.None,
   providers: [
     {
@@ -158,7 +158,29 @@ export interface ImageUploadConfig {
           </div>
         </div>
         
-        <button type="button" (click)="insertLink()" [title]="translations.insertLink">&#128279; {{ translations.link }}</button>
+        <div class="palette-picker-container">
+          <button type="button" (click)="toggleLinkPalette()" [title]="translations.insertLink">&#128279; {{ translations.link }}</button>
+          <div class="input-palette" *ngIf="showLinkPalette">
+            <div class="palette-header">{{translations.insertLink}}</div>
+            <input type="text" [(ngModel)]="paletteInputUrl" [placeholder]="translations.enterLinkUrl" (keyup.enter)="confirmLink()">
+            <button type="button" class="insert-btn" (click)="confirmLink()">{{translations.insert}}</button>
+          </div>
+        </div>
+
+        <div class="palette-picker-container">
+          <button type="button" (click)="toggleVideoPalette()" [title]="translations.insertVideo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"></polygon>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+            </svg>
+            {{ translations.video }}
+          </button>
+          <div class="input-palette" *ngIf="showVideoPalette">
+            <div class="palette-header">{{translations.insertVideo}}</div>
+            <input type="text" [(ngModel)]="paletteInputUrl" [placeholder]="translations.enterVideoUrl" (keyup.enter)="confirmVideo()">
+            <button type="button" class="insert-btn" (click)="confirmVideo()">{{translations.insert}}</button>
+          </div>
+        </div>
         
         <label class="image-upload-label" [title]="translations.insertImage">
           &#128196; {{ translations.image }}
@@ -180,9 +202,10 @@ export interface ImageUploadConfig {
           (scroll)="updateResizerPosition()">
         </div>
 
-        <!-- Image Resize Overlay -->
-        <div *ngIf="selectedImage" 
+        <!-- Media Resize Overlay -->
+        <div *ngIf="selectedMedia" 
              class="image-resizer-overlay" 
+             [class.is-resizing]="isResizing"
              [style.top.px]="resizerTop" 
              [style.left.px]="resizerLeft"
              [style.width.px]="resizerWidth"
@@ -191,6 +214,8 @@ export interface ImageUploadConfig {
           <div class="resizer-handle top-right" (mousedown)="startResize($event, 'tr')"></div>
           <div class="resizer-handle bottom-left" (mousedown)="startResize($event, 'bl')"></div>
           <div class="resizer-handle bottom-right" (mousedown)="startResize($event, 'br')"></div>
+          <!-- Shield to prevent iframe from capturing mouse events -->
+          <div class="resizer-shield" *ngIf="isResizing"></div>
         </div>
       </div>
     </div>
@@ -266,7 +291,8 @@ export interface ImageUploadConfig {
       display: inline-block;
     }
     
-    .rwriter-container .color-picker-container {
+    .rwriter-container .color-picker-container,
+    .rwriter-container .palette-picker-container {
       position: relative;
       display: inline-flex;
     }
@@ -281,7 +307,8 @@ export interface ImageUploadConfig {
       font-size: 14px;
       transition: all 0.2s ease-in-out;
     }
-    .rwriter-container .color-palette {
+    .rwriter-container .color-palette,
+    .rwriter-container .input-palette {
       position: absolute;
       top: 100%;
       right: 0;
@@ -292,12 +319,40 @@ export interface ImageUploadConfig {
       border-radius: 8px;
       padding: 10px;
       z-index: 100;
-      display: grid;
-      grid-template-columns: repeat(10, 22px);
-      gap: 4px;
       width: max-content;
       animation: fadeIn 0.15s ease-out;
     }
+    .rwriter-container .color-palette {
+      display: grid;
+      grid-template-columns: repeat(10, 22px);
+      gap: 4px;
+    }
+    .rwriter-container .input-palette {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 250px;
+      padding: 12px;
+    }
+    .rwriter-container .palette-header {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .rwriter-container .input-palette input {
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .rwriter-container .input-palette input:focus {
+      border-color: #3b82f6;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-4px); }
       to { opacity: 1; transform: translateY(0); }
@@ -422,7 +477,8 @@ export interface ImageUploadConfig {
     .rwriter-container .custom-inputs-row input:focus {
       border-color: #3b82f6;
     }
-    .rwriter-container .table-palette .insert-btn {
+    .rwriter-container .table-palette .insert-btn,
+    .rwriter-container .input-palette .insert-btn {
       background-color: #3b82f6 !important;
       color: #ffffff !important;
       border: none !important;
@@ -434,7 +490,8 @@ export interface ImageUploadConfig {
       text-align: center;
       font-size: 13px;
     }
-    .rwriter-container .table-palette .insert-btn:hover {
+    .rwriter-container .table-palette .insert-btn:hover,
+    .rwriter-container .input-palette .insert-btn:hover {
       background-color: #2563eb !important;
     }
 
@@ -487,14 +544,18 @@ export interface ImageUploadConfig {
       padding: 0 2px;
     }
 
-    .rwriter-container .rwriter-editor img, .rwriter-content img {
+    .rwriter-container .rwriter-editor img, .rwriter-content img,
+    .rwriter-container .rwriter-editor iframe, .rwriter-content iframe,
+    .rwriter-container .rwriter-editor video, .rwriter-content video {
       max-width: 100%;
       height: auto;
       cursor: pointer;
       border-radius: 4px;
       transition: box-shadow 0.2s;
     }
-    .rwriter-container .rwriter-editor img:hover {
+    .rwriter-container .rwriter-editor img:hover,
+    .rwriter-container .rwriter-editor iframe:hover,
+    .rwriter-container .rwriter-editor video:hover {
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
@@ -507,6 +568,9 @@ export interface ImageUploadConfig {
       z-index: 10;
       border-radius: 4px;
       box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+    }
+    .rwriter-container .image-resizer-overlay.is-resizing {
+      border-style: dashed;
     }
     .rwriter-container .resizer-handle {
       position: absolute;
@@ -524,6 +588,17 @@ export interface ImageUploadConfig {
     .rwriter-container .resizer-handle.bottom-left { bottom: -6px; left: -6px; cursor: nesw-resize; }
     .rwriter-container .resizer-handle.bottom-right { bottom: -6px; right: -6px; cursor: nwse-resize; }
     
+    .rwriter-container .resizer-shield {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: transparent;
+      z-index: 11;
+      pointer-events: auto;
+    }
+
     /* Dark Theme */
     .rwriter-container.dark-theme {
       background: #0f172a !important;
@@ -565,10 +640,19 @@ export interface ImageUploadConfig {
     .rwriter-container.dark-theme .rwriter-toolbar .separator {
       background-color: #475569 !important;
     }
-    .rwriter-container.dark-theme .color-palette {
+    .rwriter-container.dark-theme .color-palette,
+    .rwriter-container.dark-theme .input-palette {
       background: #1e293b !important;
       border-color: #334155 !important;
       box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    }
+    .rwriter-container.dark-theme .palette-header {
+      color: #94a3b8 !important;
+    }
+    .rwriter-container.dark-theme .input-palette input {
+      background-color: #0f172a !important;
+      border-color: #475569 !important;
+      color: #e2e8f0 !important;
     }
     .rwriter-container.dark-theme .color-swatch {
       border-color: rgba(255,255,255,0.1) !important;
@@ -669,14 +753,19 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   customTableRows = 2;
   customTableCols = 2;
 
-  // Image Resizer State
-  selectedImage: HTMLImageElement | null = null;
+  // Link & Video Palette State
+  showLinkPalette = false;
+  showVideoPalette = false;
+  paletteInputUrl = '';
+
+  // Media Resizer State
+  selectedMedia: HTMLElement | null = null;
   resizerTop = 0;
   resizerLeft = 0;
   resizerWidth = 0;
   resizerHeight = 0;
 
-  private isResizing = false;
+  isResizing = false;
   private resizeHandle = '';
   private startX = 0;
   private startY = 0;
@@ -736,11 +825,13 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   toggleTextColorPicker() {
     this.showTextColorPicker = !this.showTextColorPicker;
     this.showBgColorPicker = false;
+    this.closeAllPalettes();
   }
 
   toggleBgColorPicker() {
     this.showBgColorPicker = !this.showBgColorPicker;
     this.showTextColorPicker = false;
+    this.closeAllPalettes();
   }
 
   setTextColor(color: string, event: MouseEvent) {
@@ -758,23 +849,23 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
 
   align(alignment: 'Left' | 'Center' | 'Right' | 'Full') {
     this.editorRef.nativeElement.focus();
-    if (this.selectedImage) {
+    if (this.selectedMedia) {
       if (alignment === 'Left') {
-        this.selectedImage.style.display = 'inline';
-        this.selectedImage.style.float = 'left';
-        this.selectedImage.style.margin = '0 1em 1em 0';
+        this.selectedMedia.style.display = 'inline-block';
+        this.selectedMedia.style.float = 'left';
+        this.selectedMedia.style.margin = '0 1em 1em 0';
       } else if (alignment === 'Right') {
-        this.selectedImage.style.display = 'inline';
-        this.selectedImage.style.float = 'right';
-        this.selectedImage.style.margin = '0 0 1em 1em';
+        this.selectedMedia.style.display = 'inline-block';
+        this.selectedMedia.style.float = 'right';
+        this.selectedMedia.style.margin = '0 0 1em 1em';
       } else if (alignment === 'Center') {
-        this.selectedImage.style.display = 'block';
-        this.selectedImage.style.float = 'none';
-        this.selectedImage.style.margin = '1em auto';
+        this.selectedMedia.style.display = 'block';
+        this.selectedMedia.style.float = 'none';
+        this.selectedMedia.style.margin = '1em auto';
       } else {
-        this.selectedImage.style.display = 'inline';
-        this.selectedImage.style.float = 'none';
-        this.selectedImage.style.margin = '0';
+        this.selectedMedia.style.display = 'inline-block';
+        this.selectedMedia.style.float = 'none';
+        this.selectedMedia.style.margin = '0';
       }
       this.updateResizerPosition();
       this.onInput();
@@ -816,11 +907,72 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
     this.execCommand('insertHTML', html);
   }
 
-  insertLink() {
-    const url = prompt(this.translations.enterLinkUrl);
-    if (url) {
-      this.execCommand('createLink', url);
+  // --- Universal Input Dropdown Logic ---
+  toggleLinkPalette() {
+    this.showLinkPalette = !this.showLinkPalette;
+    this.showVideoPalette = false;
+    this.showTextColorPicker = false;
+    this.showBgColorPicker = false;
+    this.paletteInputUrl = '';
+  }
+
+  toggleVideoPalette() {
+    this.showVideoPalette = !this.showVideoPalette;
+    this.showLinkPalette = false;
+    this.showTextColorPicker = false;
+    this.showBgColorPicker = false;
+    this.paletteInputUrl = '';
+  }
+
+  private closeAllPalettes() {
+    this.showLinkPalette = false;
+    this.showVideoPalette = false;
+    this.showTablePalette = false;
+  }
+
+  confirmLink() {
+    if (this.paletteInputUrl) {
+      this.execCommand('createLink', this.paletteInputUrl);
     }
+    this.showLinkPalette = false;
+    this.paletteInputUrl = '';
+  }
+
+  confirmVideo() {
+    if (this.paletteInputUrl) {
+      const html = this.getVideoHtml(this.paletteInputUrl);
+      this.execCommand('insertHTML', html);
+    }
+    this.showVideoPalette = false;
+    this.paletteInputUrl = '';
+  }
+
+  private getVideoHtml(url: string): string {
+    const youtubeId = this.extractYoutubeId(url);
+    if (youtubeId) {
+      return `<iframe src="https://www.youtube.com/embed/${youtubeId}" frameborder="0" allowfullscreen style="width: 560px; height: 315px; max-width: 100%;"></iframe><p><br></p>`;
+    }
+    
+    if (this.isDirectVideo(url)) {
+      return `<video src="${url}" controls style="width: 560px; height: auto; max-width: 100%;"></video><p><br></p>`;
+    }
+
+    return `<a href="${url}">${url}</a>`;
+  }
+
+  private extractYoutubeId(url: string): string | null {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  }
+
+  private isDirectVideo(url: string): boolean {
+    return /\.(mp4|webm|ogg)$/i.test(url);
+  }
+  // ----------------------------------------
+
+  insertLink() {
+    this.toggleLinkPalette();
   }
 
   async insertImage(event: Event) {
@@ -850,65 +1002,68 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
 
   onEditorClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
-    if (target.tagName.toLowerCase() === 'img') {
-      this.selectedImage = target as HTMLImageElement;
+    const tags = ['img', 'iframe', 'video'];
+    if (tags.includes(target.tagName.toLowerCase())) {
+      this.selectedMedia = target;
       this.updateResizerPosition();
     } else {
-      this.selectedImage = null;
+      this.selectedMedia = null;
     }
   }
 
   onEditorKeydown(event: KeyboardEvent) {
-    if (this.selectedImage && (event.key === 'Backspace' || event.key === 'Delete')) {
-      this.selectedImage.remove();
-      this.selectedImage = null;
+    if (this.selectedMedia && (event.key === 'Backspace' || event.key === 'Delete')) {
+      this.selectedMedia.remove();
+      this.selectedMedia = null;
       this.onInput();
       event.preventDefault();
     }
   }
 
   updateResizerPosition() {
-    if (!this.selectedImage) return;
+    if (!this.selectedMedia) return;
     
     const editorWrapper = this.editorRef.nativeElement.parentElement;
     if (!editorWrapper) return;
     
     const wrapperRect = editorWrapper.getBoundingClientRect();
-    const imgRect = this.selectedImage.getBoundingClientRect();
+    const mediaRect = this.selectedMedia.getBoundingClientRect();
     
-    this.resizerTop = imgRect.top - wrapperRect.top + editorWrapper.scrollTop;
-    this.resizerLeft = imgRect.left - wrapperRect.left + editorWrapper.scrollLeft;
-    this.resizerWidth = imgRect.width;
-    this.resizerHeight = imgRect.height;
+    this.resizerTop = mediaRect.top - wrapperRect.top + editorWrapper.scrollTop;
+    this.resizerLeft = mediaRect.left - wrapperRect.left + editorWrapper.scrollLeft;
+    this.resizerWidth = mediaRect.width;
+    this.resizerHeight = mediaRect.height;
   }
 
   @HostListener('document:mousedown', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     
-    // Deselect image if clicking outside
-    if (this.selectedImage && !this.editorRef.nativeElement.contains(target) && !target.classList.contains('resizer-handle')) {
-      this.selectedImage = null;
+    // Deselect media if clicking outside
+    if (this.selectedMedia && !this.editorRef.nativeElement.contains(target) && !target.classList.contains('resizer-handle')) {
+      this.selectedMedia = null;
     }
     
-    // Close color pickers if clicking outside
-    if (!target.closest('.color-picker-container')) {
+    // Close palettes if clicking outside
+    if (!target.closest('.color-picker-container') && !target.closest('.palette-picker-container')) {
       this.showTextColorPicker = false;
       this.showBgColorPicker = false;
+      this.showLinkPalette = false;
+      this.showVideoPalette = false;
     }
   }
 
   startResize(event: MouseEvent, handle: string) {
     event.preventDefault();
     event.stopPropagation();
-    if (!this.selectedImage) return;
+    if (!this.selectedMedia) return;
 
     this.isResizing = true;
     this.resizeHandle = handle;
     this.startX = event.clientX;
     this.startY = event.clientY;
-    this.startWidth = this.selectedImage.clientWidth;
-    this.startHeight = this.selectedImage.clientHeight;
+    this.startWidth = this.selectedMedia.clientWidth;
+    this.startHeight = this.selectedMedia.clientHeight;
 
     const onMouseMove = (e: MouseEvent) => this.doResize(e);
     const onMouseUp = () => {
@@ -923,7 +1078,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   }
 
   doResize(event: MouseEvent) {
-    if (!this.isResizing || !this.selectedImage) return;
+    if (!this.isResizing || !this.selectedMedia) return;
 
     const dx = event.clientX - this.startX;
     const dy = event.clientY - this.startY;
@@ -946,8 +1101,8 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
     newHeight = newWidth / ratio;
 
     if (newWidth > 20 && newHeight > 20) {
-      this.selectedImage.style.width = newWidth + 'px';
-      this.selectedImage.style.height = newHeight + 'px';
+      this.selectedMedia.style.width = newWidth + 'px';
+      this.selectedMedia.style.height = (this.selectedMedia.tagName.toLowerCase() === 'video') ? 'auto' : newHeight + 'px';
       this.updateResizerPosition();
     }
   }

@@ -35,7 +35,7 @@ import { CommonModule } from '@angular/common';
     .rwriter-content table td, .rwriter-content table th { border: 1px solid #cbd5e1 !important; padding: 8px 12px !important; }
     .dark-theme.rwriter-content table td, .dark-theme.rwriter-content table th { border-color: #475569 !important; }
     .rwriter-content [style*='background-color'] { display: inline !important; border-radius: 2px; padding: 0 2px; }
-    .rwriter-content img { max-width: 100%; height: auto; border-radius: 4px; }
+    .rwriter-content img, .rwriter-content iframe, .rwriter-content video { max-width: 100%; height: auto; border-radius: 4px; }
     .dark-theme.rwriter-content { color: #e2e8f0 !important; }
     .dark-theme.rwriter-content h1 { color: #f8fafc !important; }
     .dark-theme.rwriter-content h2 { color: #f1f5f9 !important; }

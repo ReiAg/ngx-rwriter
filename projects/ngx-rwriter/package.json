@@ -1,6 +1,6 @@
 {
   "name": "@reiagaru/ngx-rwriter",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A powerful, lightweight, and modern Rich Text Editor component for Angular 21+ with native support for images, alignment, lists, color pickers, and translations.",
   "keywords": [
     "angular",
@@ -25,6 +25,7 @@
   "peerDependencies": {
     "@angular/common": "^21.0.0",
     "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
     "@angular/platform-browser": "^21.0.0"
   },
   "dependencies": {

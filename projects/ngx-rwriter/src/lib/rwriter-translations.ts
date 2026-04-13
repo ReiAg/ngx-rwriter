@@ -22,7 +22,10 @@ export interface RwriterTranslations {
   link: string;
   insertImage: string;
   image: string;
+  insertVideo: string;
+  video: string;
   enterLinkUrl: string;
+  enterVideoUrl: string;
   insertTable: string;
   table: string;
   tableRows: string;
@@ -54,7 +57,10 @@ export const RW_EN: RwriterTranslations = {
   link: 'Link',
   insertImage: 'Insert Image',
   image: 'Image',
+  insertVideo: 'Insert Video',
+  video: 'Video',
   enterLinkUrl: 'Enter link URL:',
+  enterVideoUrl: 'Enter video URL (YouTube or direct link):',
   insertTable: 'Insert Table',
   table: 'Table',
   tableRows: 'Rows:',
@@ -86,7 +92,10 @@ export const RW_RU: RwriterTranslations = {
   link: 'Ссылка',
   insertImage: 'Вставить изображение',
   image: 'Изображение',
+  insertVideo: 'Вставить видео',
+  video: 'Видео',
   enterLinkUrl: 'Введите URL ссылки:',
+  enterVideoUrl: 'Введите URL видео (YouTube или прямая ссылка):',
   insertTable: 'Вставить таблицу',
   table: 'Таблица',
   tableRows: 'Строки:',
@@ -118,7 +127,10 @@ export const RW_KK: RwriterTranslations = {
   link: 'Сілтеме',
   insertImage: 'Сурет кірістіру',
   image: 'Сурет',
+  insertVideo: 'Видео кірістіру',
+  video: 'Видео',
   enterLinkUrl: 'Сілтеме URL енгізіңіз:',
+  enterVideoUrl: 'Видео URL енгізіңіз (YouTube немесе тікелей сілтеме):',
   insertTable: 'Кесте кірістіру',
   table: 'Кесте',
   tableRows: 'Жолдар:',
