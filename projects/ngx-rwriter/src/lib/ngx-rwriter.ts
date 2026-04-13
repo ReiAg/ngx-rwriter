@@ -1,18 +1,18 @@
 import {
   Component,
   ElementRef,
-  EventEmitter,
-  Input,
-  Output,
-  ViewChild,
+  input,
   forwardRef,
   HostListener,
   AfterViewInit,
   ChangeDetectorRef,
-  OnInit,
+  inject,
+  signal,
+  computed,
+  viewChild,
+  ViewEncapsulation,
   OnChanges,
-  OnDestroy,
-  ViewEncapsulation
+  SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor, FormsModule } from '@angular/forms';
@@ -36,18 +36,18 @@ export interface ImageUploadConfig {
     }
   ],
   template: `
-    <div class="rwriter-container" [class.dark-theme]="isDarkTheme">
+    <div class="rwriter-container" [class.dark-theme]="isDarkTheme()">
       <div class="rwriter-toolbar">
         <!-- Formatting -->
-        <select (change)="execCommand('formatBlock', $any($event.target).value)" [title]="translations.paragraphStyle">
-          <option value="P">{{ translations.paragraph }}</option>
-          <option value="H1">{{ translations.heading1 }}</option>
-          <option value="H2">{{ translations.heading2 }}</option>
-          <option value="H3">{{ translations.heading3 }}</option>
-          <option value="H4">{{ translations.heading4 }}</option>
+        <select (change)="execCommand('formatBlock', $any($event.target).value)" [title]="translations().paragraphStyle">
+          <option value="P">{{ translations().paragraph }}</option>
+          <option value="H1">{{ translations().heading1 }}</option>
+          <option value="H2">{{ translations().heading2 }}</option>
+          <option value="H3">{{ translations().heading3 }}</option>
+          <option value="H4">{{ translations().heading4 }}</option>
         </select>
 
-        <select (change)="execCommand('fontName', $any($event.target).value)" [title]="translations.fontFamily">
+        <select (change)="execCommand('fontName', $any($event.target).value)" [title]="translations().fontFamily">
           <option value="Arial">Arial</option>
           <option value="Times New Roman">Times New Roman</option>
           <option value="Courier New">Courier</option>
@@ -57,35 +57,35 @@ export interface ImageUploadConfig {
           <option value="Trebuchet MS">Trebuchet MS</option>
         </select>
 
-        <button type="button" (click)="execCommand('bold')" [title]="translations.bold"><b>B</b></button>
-        <button type="button" (click)="execCommand('italic')" [title]="translations.italic"><i>I</i></button>
-        <button type="button" (click)="execCommand('underline')" [title]="translations.underline"><u>U</u></button>
+        <button type="button" (click)="execCommand('bold')" [title]="translations().bold"><b>B</b></button>
+        <button type="button" (click)="execCommand('italic')" [title]="translations().italic"><i>I</i></button>
+        <button type="button" (click)="execCommand('underline')" [title]="translations().underline"><u>U</u></button>
         
         <span class="separator"></span>
 
         <!-- Alignment -->
-        <button type="button" (click)="align('Left')" [title]="translations.alignLeft">
+        <button type="button" (click)="align('Left')" [title]="translations().alignLeft">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="12" x2="15" y2="12"></line>
             <line x1="3" y1="18" x2="19" y2="18"></line>
           </svg>
         </button>
-        <button type="button" (click)="align('Center')" [title]="translations.alignCenter">
+        <button type="button" (click)="align('Center')" [title]="translations().alignCenter">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="6" y1="12" x2="18" y2="12"></line>
             <line x1="4" y1="18" x2="20" y2="18"></line>
           </svg>
         </button>
-        <button type="button" (click)="align('Right')" [title]="translations.alignRight">
+        <button type="button" (click)="align('Right')" [title]="translations().alignRight">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="9" y1="12" x2="21" y2="12"></line>
             <line x1="5" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <button type="button" (click)="align('Full')" [title]="translations.justify">
+        <button type="button" (click)="align('Full')" [title]="translations().justify">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -96,94 +96,115 @@ export interface ImageUploadConfig {
         <span class="separator"></span>
 
         <!-- Lists -->
-        <button type="button" (click)="execCommand('insertUnorderedList')" [title]="translations.bulletedList">&bull; List</button>
-        <button type="button" (click)="execCommand('insertOrderedList')" [title]="translations.numberedList">1. List</button>
+        <button type="button" (click)="execCommand('insertUnorderedList')" [title]="translations().bulletedList">&bull; List</button>
+        <button type="button" (click)="execCommand('insertOrderedList')" [title]="translations().numberedList">1. List</button>
 
         <span class="separator"></span>
 
         <!-- Colors -->
         <div class="color-picker-container" (mousedown)="$event.preventDefault()" (click)="toggleTextColorPicker()">
-          <div class="color-picker-label" [title]="translations.textColor">
+          <div class="color-picker-label" [title]="translations().textColor">
             <span class="color-icon" style="color: #d93025; font-weight: bold; font-family: serif; border-bottom: 3px solid currentColor; line-height: 1;">A</span>
           </div>
-          <div class="color-palette" *ngIf="showTextColorPicker">
-            <div *ngFor="let c of colors" class="color-swatch" [style.background]="c" (click)="setTextColor(c, $event)" [title]="c"></div>
-          </div>
+          @if (showTextColorPicker()) {
+            <div class="color-palette">
+              @for (c of colors; track c) {
+                <div class="color-swatch" [style.background]="c" (click)="setTextColor(c, $event)" [title]="c"></div>
+              }
+            </div>
+          }
         </div>
 
         <div class="color-picker-container" (mousedown)="$event.preventDefault()" (click)="toggleBgColorPicker()">
-          <div class="color-picker-label" [title]="translations.backgroundColor">
+          <div class="color-picker-label" [title]="translations().backgroundColor">
             <span class="color-icon" style="background: #fbbc04; color: #000; padding: 0 2px; font-family: serif; line-height: 1;">ab</span>
           </div>
-          <div class="color-palette" *ngIf="showBgColorPicker">
-            <div *ngFor="let c of colors" class="color-swatch" [style.background]="c" (click)="setBgColor(c, $event)" [title]="c"></div>
-            <div class="color-swatch clear-bg" [title]="translations.clearBackground" (click)="setBgColor('transparent', $event)">&#10005;</div>
-          </div>
+          @if (showBgColorPicker()) {
+            <div class="color-palette">
+              @for (c of colors; track c) {
+                <div class="color-swatch" [style.background]="c" (click)="setBgColor(c, $event)" [title]="c"></div>
+              }
+              <div class="color-swatch clear-bg" [title]="translations().clearBackground" (click)="setBgColor('transparent', $event)">&#10005;</div>
+            </div>
+          }
         </div>
 
         <span class="separator"></span>
 
         <!-- Insert -->
-        <div class="table-picker-container" (mouseenter)="showTablePalette = true" (mouseleave)="showTablePalette = false">
-          <button type="button" (click)="insertTable()" [title]="translations.insertTable">
+        <div class="table-picker-container" (mouseenter)="showTablePalette.set(true)" (mouseleave)="showTablePalette.set(false)">
+          <button type="button" (click)="insertTable()" [title]="translations().insertTable">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="3" y1="12" x2="21" y2="12"></line>
               <line x1="12" y1="3" x2="12" y2="21"></line>
             </svg>
           </button>
-          <div class="table-palette" *ngIf="showTablePalette">
-            <div class="table-grid-header">
-              <span *ngIf="hoveredGridRow && hoveredGridCol">{{hoveredGridRow}} x {{hoveredGridCol}}</span>
-              <span *ngIf="!hoveredGridRow || !hoveredGridCol">{{translations.table}}</span>
-            </div>
-            <div class="table-grid" (mouseleave)="hoveredGridRow = 0; hoveredGridCol = 0">
-              <div *ngFor="let r of gridRows" class="table-grid-row">
-                <div *ngFor="let c of gridCols" 
-                     class="table-grid-cell"
-                     [class.active]="r <= hoveredGridRow && c <= hoveredGridCol"
-                     (mouseenter)="hoveredGridRow = r; hoveredGridCol = c"
-                     (click)="insertTableGrid(r, c)">
+          @if (showTablePalette()) {
+            <div class="table-palette">
+              <div class="table-grid-header">
+                @if (hoveredGridRow() && hoveredGridCol()) {
+                  <span>{{hoveredGridRow()}} x {{hoveredGridCol()}}</span>
+                } @else {
+                  <span>{{translations().table}}</span>
+                }
+              </div>
+              <div class="table-grid" (mouseleave)="hoveredGridRow.set(0); hoveredGridCol.set(0)">
+                @for (r of gridRows; track r) {
+                  <div class="table-grid-row">
+                    @for (c of gridCols; track c) {
+                      <div 
+                           class="table-grid-cell"
+                           [class.active]="r <= hoveredGridRow() && c <= hoveredGridCol()"
+                           (mouseenter)="hoveredGridRow.set(r); hoveredGridCol.set(c)"
+                           (click)="insertTableGrid(r, c)">
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="table-custom-inputs">
+                <div class="custom-inputs-row">
+                  <input type="number" min="1" [(ngModel)]="customTableRows" [title]="translations().tableRows">
+                  <span>x</span>
+                  <input type="number" min="1" [(ngModel)]="customTableCols" [title]="translations().tableCols">
                 </div>
+                <button type="button" class="insert-btn" (click)="insertCustomTable()">{{translations().insert}}</button>
               </div>
             </div>
-            <div class="table-custom-inputs">
-              <div class="custom-inputs-row">
-                <input type="number" min="1" [value]="customTableRows" (input)="customTableRows = $any($event.target).valueAsNumber" [title]="translations.tableRows">
-                <span>x</span>
-                <input type="number" min="1" [value]="customTableCols" (input)="customTableCols = $any($event.target).valueAsNumber" [title]="translations.tableCols">
-              </div>
-              <button type="button" class="insert-btn" (click)="insertCustomTable()">{{translations.insert}}</button>
-            </div>
-          </div>
+          }
         </div>
         
         <div class="palette-picker-container">
-          <button type="button" (click)="toggleLinkPalette()" [title]="translations.insertLink">&#128279; {{ translations.link }}</button>
-          <div class="input-palette" *ngIf="showLinkPalette">
-            <div class="palette-header">{{translations.insertLink}}</div>
-            <input type="text" [(ngModel)]="paletteInputUrl" [placeholder]="translations.enterLinkUrl" (keyup.enter)="confirmLink()">
-            <button type="button" class="insert-btn" (click)="confirmLink()">{{translations.insert}}</button>
-          </div>
+          <button type="button" (click)="toggleLinkPalette()" [title]="translations().insertLink">&#128279; {{ translations().link }}</button>
+          @if (showLinkPalette()) {
+            <div class="input-palette" (mousedown)="$event.stopPropagation()">
+              <div class="palette-header">{{translations().insertLink}}</div>
+              <input type="text" [(ngModel)]="paletteInputUrl" [placeholder]="translations().enterLinkUrl" (keyup.enter)="confirmLink()">
+              <button type="button" class="insert-btn" (click)="confirmLink()">{{translations().insert}}</button>
+            </div>
+          }
         </div>
 
         <div class="palette-picker-container">
-          <button type="button" (click)="toggleVideoPalette()" [title]="translations.insertVideo">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button type="button" (click)="toggleVideoPalette()" [title]="translations().insertVideo">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
               <polygon points="23 7 16 12 23 17 23 7"></polygon>
               <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
             </svg>
-            {{ translations.video }}
+            {{ translations().video }}
           </button>
-          <div class="input-palette" *ngIf="showVideoPalette">
-            <div class="palette-header">{{translations.insertVideo}}</div>
-            <input type="text" [(ngModel)]="paletteInputUrl" [placeholder]="translations.enterVideoUrl" (keyup.enter)="confirmVideo()">
-            <button type="button" class="insert-btn" (click)="confirmVideo()">{{translations.insert}}</button>
-          </div>
+          @if (showVideoPalette()) {
+            <div class="input-palette" (mousedown)="$event.stopPropagation()">
+              <div class="palette-header">{{translations().insertVideo}}</div>
+              <input type="text" [(ngModel)]="paletteInputUrl" [placeholder]="translations().enterVideoUrl" (keyup.enter)="confirmVideo()">
+              <button type="button" class="insert-btn" (click)="confirmVideo()">{{translations().insert}}</button>
+            </div>
+          }
         </div>
         
-        <label class="image-upload-label" [title]="translations.insertImage">
-          &#128196; {{ translations.image }}
+        <label class="image-upload-label" [title]="translations().insertImage">
+          &#128196; {{ translations().image }}
           <input type="file" accept="image/*" (change)="insertImage($event)" style="display:none">
         </label>
       </div>
@@ -192,8 +213,8 @@ export interface ImageUploadConfig {
         <div 
           #editor 
           class="rwriter-editor rwriter-content" 
-          [style.height]="height"
-          [style.minHeight]="height ? 'auto' : '300px'"
+          [style.height]="height()"
+          [style.minHeight]="height() ? 'auto' : '300px'"
           contenteditable="true" 
           (input)="onInput()" 
           (blur)="onTouched()"
@@ -203,20 +224,24 @@ export interface ImageUploadConfig {
         </div>
 
         <!-- Media Resize Overlay -->
-        <div *ngIf="selectedMedia" 
-             class="image-resizer-overlay" 
-             [class.is-resizing]="isResizing"
-             [style.top.px]="resizerTop" 
-             [style.left.px]="resizerLeft"
-             [style.width.px]="resizerWidth"
-             [style.height.px]="resizerHeight">
-          <div class="resizer-handle top-left" (mousedown)="startResize($event, 'tl')"></div>
-          <div class="resizer-handle top-right" (mousedown)="startResize($event, 'tr')"></div>
-          <div class="resizer-handle bottom-left" (mousedown)="startResize($event, 'bl')"></div>
-          <div class="resizer-handle bottom-right" (mousedown)="startResize($event, 'br')"></div>
-          <!-- Shield to prevent iframe from capturing mouse events -->
-          <div class="resizer-shield" *ngIf="isResizing"></div>
-        </div>
+        @if (selectedMedia()) {
+          <div 
+               class="image-resizer-overlay" 
+               [class.is-resizing]="isResizing()"
+               [style.top.px]="resizerTop()" 
+               [style.left.px]="resizerLeft()"
+               [style.width.px]="resizerWidth()"
+               [style.height.px]="resizerHeight()">
+            <div class="resizer-handle top-left" (mousedown)="startResize($event, 'tl')"></div>
+            <div class="resizer-handle top-right" (mousedown)="startResize($event, 'tr')"></div>
+            <div class="resizer-handle bottom-left" (mousedown)="startResize($event, 'bl')"></div>
+            <div class="resizer-handle bottom-right" (mousedown)="startResize($event, 'br')"></div>
+            <!-- Shield to prevent iframe from capturing mouse events -->
+             @if (isResizing()) {
+              <div class="resizer-shield"></div>
+             }
+          </div>
+        }
       </div>
     </div>
   `,
@@ -680,50 +705,35 @@ export interface ImageUploadConfig {
     .rwriter-container.dark-theme .rwriter-editor blockquote, .dark-theme.rwriter-content blockquote { border-left-color: #475569 !important; color: #94a3b8 !important; }
   `]
 })
-export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, OnChanges, OnDestroy {
-  @ViewChild('editor', { static: true }) editorRef!: ElementRef<HTMLDivElement>;
+export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnChanges {
+  editorRef = viewChild<ElementRef<HTMLDivElement>>('editor');
   
-  @Input() theme: 'auto' | 'light' | 'dark' = 'auto';
-  @Input() imageConfig: ImageUploadConfig = { mode: 'base64' };
-  @Input() translations: RwriterTranslations = RW_EN;
-  @Input() height?: string;
+  theme = input<'auto' | 'light' | 'dark'>('auto');
+  imageConfig = input<ImageUploadConfig>({ mode: 'base64' });
+  translations = input<RwriterTranslations>(RW_EN);
+  height = input<string | undefined>(undefined);
 
-  isDarkTheme = false;
-  private mediaQueryList: MediaQueryList | null = null;
-  private themeChangeListener = (e: MediaQueryListEvent) => {
-    if (this.theme === 'auto') {
-      this.isDarkTheme = e.matches;
-      this.cdr.detectChanges();
-    }
-  };
+  private cdr = inject(ChangeDetectorRef);
+  private systemDark = signal(false);
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  isDarkTheme = computed(() => {
+    const t = this.theme();
+    if (t === 'dark') return true;
+    if (t === 'light') return false;
+    return this.systemDark();
+  });
 
-  ngOnInit() {
+  constructor() {
     if (typeof window !== 'undefined' && window.matchMedia) {
-      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-      this.mediaQueryList.addEventListener('change', this.themeChangeListener);
-    }
-    this.updateThemeState();
-  }
-
-  ngOnChanges() {
-    this.updateThemeState();
-  }
-
-  ngOnDestroy() {
-    if (this.mediaQueryList) {
-      this.mediaQueryList.removeEventListener('change', this.themeChangeListener);
+      const media = window.matchMedia('(prefers-color-scheme: dark)');
+      this.systemDark.set(media.matches);
+      media.addEventListener('change', e => this.systemDark.set(e.matches));
     }
   }
 
-  private updateThemeState() {
-    if (this.theme === 'dark') {
-      this.isDarkTheme = true;
-    } else if (this.theme === 'light') {
-      this.isDarkTheme = false;
-    } else if (this.mediaQueryList) {
-      this.isDarkTheme = this.mediaQueryList.matches;
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['theme']) {
+      // Re-trigger computed isDarkTheme check if needed (though it's automatic)
     }
   }
 
@@ -731,8 +741,8 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   public onTouched = () => {};
 
   // Custom Color Picker State
-  showTextColorPicker = false;
-  showBgColorPicker = false;
+  showTextColorPicker = signal(false);
+  showBgColorPicker = signal(false);
 
   // Material-like color palette
   colors = [
@@ -745,27 +755,27 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   ];
 
   // Table Picker State
-  showTablePalette = false;
+  showTablePalette = signal(false);
   gridRows = [1, 2, 3, 4, 5, 6];
   gridCols = [1, 2, 3, 4, 5, 6];
-  hoveredGridRow = 0;
-  hoveredGridCol = 0;
+  hoveredGridRow = signal(0);
+  hoveredGridCol = signal(0);
   customTableRows = 2;
   customTableCols = 2;
 
   // Link & Video Palette State
-  showLinkPalette = false;
-  showVideoPalette = false;
+  showLinkPalette = signal(false);
+  showVideoPalette = signal(false);
   paletteInputUrl = '';
 
   // Media Resizer State
-  selectedMedia: HTMLElement | null = null;
-  resizerTop = 0;
-  resizerLeft = 0;
-  resizerWidth = 0;
-  resizerHeight = 0;
+  selectedMedia = signal<HTMLElement | null>(null);
+  resizerTop = signal(0);
+  resizerLeft = signal(0);
+  resizerWidth = signal(0);
+  resizerHeight = signal(0);
 
-  isResizing = false;
+  isResizing = signal(false);
   private resizeHandle = '';
   private startX = 0;
   private startY = 0;
@@ -773,17 +783,20 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   private startHeight = 0;
 
   ngAfterViewInit() {
-    this.editorRef.nativeElement.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        // Simple fallback to ensure P tag is used for new lines
-        document.execCommand('formatBlock', false, 'P');
-      }
-    });
+    const editor = this.editorRef()?.nativeElement;
+    if (editor) {
+      editor.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          document.execCommand('formatBlock', false, 'P');
+        }
+      });
+    }
   }
 
   writeValue(value: string): void {
-    if (this.editorRef) {
-      this.editorRef.nativeElement.innerHTML = value || '<p><br></p>';
+    const editor = this.editorRef()?.nativeElement;
+    if (editor) {
+      editor.innerHTML = value || '<p><br></p>';
     }
   }
 
@@ -796,76 +809,77 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   }
 
   setDisabledState(isDisabled: boolean): void {
-    if (this.editorRef) {
-      this.editorRef.nativeElement.contentEditable = isDisabled ? 'false' : 'true';
+    const editor = this.editorRef()?.nativeElement;
+    if (editor) {
+      editor.contentEditable = isDisabled ? 'false' : 'true';
     }
   }
 
   onInput() {
-    this.onChange(this.editorRef.nativeElement.innerHTML);
-    this.updateResizerPosition(); 
+    const editor = this.editorRef()?.nativeElement;
+    if (editor) {
+      this.onChange(editor.innerHTML);
+      this.updateResizerPosition(); 
+    }
   }
 
   execCommand(command: string, value: string = '') {
-    this.editorRef.nativeElement.focus();
+    this.editorRef()?.nativeElement.focus();
     document.execCommand(command, false, value);
     this.onInput();
   }
 
   bgColor(color: string) {
-    this.editorRef.nativeElement.focus();
-    // hiliteColor is standard for text highlight in modern webkit browsers
+    this.editorRef()?.nativeElement.focus();
     document.execCommand('hiliteColor', false, color);
-    // fallback for Firefox
     document.execCommand('backColor', false, color);
     this.onInput();
   }
 
-  // --- Custom Color Picker Actions ---
   toggleTextColorPicker() {
-    this.showTextColorPicker = !this.showTextColorPicker;
-    this.showBgColorPicker = false;
+    this.showTextColorPicker.update(v => !v);
+    this.showBgColorPicker.set(false);
     this.closeAllPalettes();
   }
 
   toggleBgColorPicker() {
-    this.showBgColorPicker = !this.showBgColorPicker;
-    this.showTextColorPicker = false;
+    this.showBgColorPicker.update(v => !v);
+    this.showTextColorPicker.set(false);
     this.closeAllPalettes();
   }
 
   setTextColor(color: string, event: MouseEvent) {
     event.stopPropagation();
     this.execCommand('foreColor', color);
-    this.showTextColorPicker = false;
+    this.showTextColorPicker.set(false);
   }
 
   setBgColor(color: string, event: MouseEvent) {
     event.stopPropagation();
     this.bgColor(color);
-    this.showBgColorPicker = false;
+    this.showBgColorPicker.set(false);
   }
-  // -----------------------------------
 
   align(alignment: 'Left' | 'Center' | 'Right' | 'Full') {
-    this.editorRef.nativeElement.focus();
-    if (this.selectedMedia) {
+    this.editorRef()?.nativeElement.focus();
+    const media = this.selectedMedia();
+    if (media) {
       if (alignment === 'Left') {
-        this.selectedMedia.style.display = 'inline-block';
-        this.selectedMedia.style.float = 'left';
-        this.selectedMedia.style.margin = '0 1em 1em 0';
+        media.style.display = 'inline-block';
+        media.style.float = 'left';
+        media.style.margin = '0 1em 1em 0';
       } else if (alignment === 'Right') {
-        this.selectedMedia.style.display = 'inline-block';
-        this.selectedMedia.style.float = 'right';
-        this.selectedMedia.style.margin = '0 0 1em 1em';
+        media.style.display = 'inline-block';
+        media.style.float = 'right';
+        media.style.margin = '0 0 1em 1em';
       } else if (alignment === 'Center') {
-        this.selectedMedia.style.display = 'block';
-        this.selectedMedia.style.float = 'none';
-        this.selectedMedia.style.margin = '1em auto';
+        media.style.display = 'block';
+        media.style.float = 'none';
+        media.style.margin = '1em auto';
       } else {
-        this.selectedMedia.style.display = 'inline-block';
-        this.selectedMedia.style.float = 'none';
-        this.selectedMedia.style.margin = '0';
+        media.style.display = 'inline-block';
+        media.style.float = 'none';
+        media.style.margin = '0';
       }
       this.updateResizerPosition();
       this.onInput();
@@ -890,11 +904,11 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   }
 
   private insertTableHtml(rows: number, cols: number) {
-    this.showTablePalette = false;
-    this.hoveredGridRow = 0;
-    this.hoveredGridCol = 0;
+    this.showTablePalette.set(false);
+    this.hoveredGridRow.set(0);
+    this.hoveredGridCol.set(0);
     
-    this.editorRef.nativeElement.focus();
+    this.editorRef()?.nativeElement.focus();
     let html = '<table class="rwriter-table"><tbody>';
     for (let r = 0; r < rows; r++) {
       html += '<tr>';
@@ -907,34 +921,33 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
     this.execCommand('insertHTML', html);
   }
 
-  // --- Universal Input Dropdown Logic ---
   toggleLinkPalette() {
-    this.showLinkPalette = !this.showLinkPalette;
-    this.showVideoPalette = false;
-    this.showTextColorPicker = false;
-    this.showBgColorPicker = false;
+    this.showLinkPalette.update(v => !v);
+    this.showVideoPalette.set(false);
+    this.showTextColorPicker.set(false);
+    this.showBgColorPicker.set(false);
     this.paletteInputUrl = '';
   }
 
   toggleVideoPalette() {
-    this.showVideoPalette = !this.showVideoPalette;
-    this.showLinkPalette = false;
-    this.showTextColorPicker = false;
-    this.showBgColorPicker = false;
+    this.showVideoPalette.update(v => !v);
+    this.showLinkPalette.set(false);
+    this.showTextColorPicker.set(false);
+    this.showBgColorPicker.set(false);
     this.paletteInputUrl = '';
   }
 
   private closeAllPalettes() {
-    this.showLinkPalette = false;
-    this.showVideoPalette = false;
-    this.showTablePalette = false;
+    this.showLinkPalette.set(false);
+    this.showVideoPalette.set(false);
+    this.showTablePalette.set(false);
   }
 
   confirmLink() {
     if (this.paletteInputUrl) {
       this.execCommand('createLink', this.paletteInputUrl);
     }
-    this.showLinkPalette = false;
+    this.showLinkPalette.set(false);
     this.paletteInputUrl = '';
   }
 
@@ -943,7 +956,7 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
       const html = this.getVideoHtml(this.paletteInputUrl);
       this.execCommand('insertHTML', html);
     }
-    this.showVideoPalette = false;
+    this.showVideoPalette.set(false);
     this.paletteInputUrl = '';
   }
 
@@ -969,7 +982,6 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   private isDirectVideo(url: string): boolean {
     return /\.(mp4|webm|ogg)$/i.test(url);
   }
-  // ----------------------------------------
 
   insertLink() {
     this.toggleLinkPalette();
@@ -981,16 +993,16 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
 
     const file = input.files[0];
     
-    if (this.imageConfig.mode === 'base64') {
+    if (this.imageConfig().mode === 'base64') {
       const reader = new FileReader();
       reader.onload = (e) => {
         const url = e.target?.result as string;
         this.execCommand('insertImage', url);
       };
       reader.readAsDataURL(file);
-    } else if (this.imageConfig.mode === 'upload' && this.imageConfig.uploadFn) {
+    } else if (this.imageConfig().mode === 'upload' && this.imageConfig().uploadFn) {
       try {
-        const url = await this.imageConfig.uploadFn(file);
+        const url = await this.imageConfig().uploadFn!(file);
         this.execCommand('insertImage', url);
       } catch (err) {
         console.error('Image upload failed', err);
@@ -1004,70 +1016,73 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
     const target = event.target as HTMLElement;
     const tags = ['img', 'iframe', 'video'];
     if (tags.includes(target.tagName.toLowerCase())) {
-      this.selectedMedia = target;
+      this.selectedMedia.set(target);
       this.updateResizerPosition();
     } else {
-      this.selectedMedia = null;
+      this.selectedMedia.set(null);
     }
   }
 
   onEditorKeydown(event: KeyboardEvent) {
-    if (this.selectedMedia && (event.key === 'Backspace' || event.key === 'Delete')) {
-      this.selectedMedia.remove();
-      this.selectedMedia = null;
+    const media = this.selectedMedia();
+    if (media && (event.key === 'Backspace' || event.key === 'Delete')) {
+      media.remove();
+      this.selectedMedia.set(null);
       this.onInput();
       event.preventDefault();
     }
   }
 
   updateResizerPosition() {
-    if (!this.selectedMedia) return;
+    const media = this.selectedMedia();
+    if (!media) return;
     
-    const editorWrapper = this.editorRef.nativeElement.parentElement;
+    const editorWrapper = this.editorRef()?.nativeElement.parentElement;
     if (!editorWrapper) return;
     
     const wrapperRect = editorWrapper.getBoundingClientRect();
-    const mediaRect = this.selectedMedia.getBoundingClientRect();
+    const mediaRect = media.getBoundingClientRect();
     
-    this.resizerTop = mediaRect.top - wrapperRect.top + editorWrapper.scrollTop;
-    this.resizerLeft = mediaRect.left - wrapperRect.left + editorWrapper.scrollLeft;
-    this.resizerWidth = mediaRect.width;
-    this.resizerHeight = mediaRect.height;
+    this.resizerTop.set(mediaRect.top - wrapperRect.top + editorWrapper.scrollTop);
+    this.resizerLeft.set(mediaRect.left - wrapperRect.left + editorWrapper.scrollLeft);
+    this.resizerWidth.set(mediaRect.width);
+    this.resizerHeight.set(mediaRect.height);
   }
 
   @HostListener('document:mousedown', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
+    const media = this.selectedMedia();
+    const editor = this.editorRef()?.nativeElement;
     
-    // Deselect media if clicking outside
-    if (this.selectedMedia && !this.editorRef.nativeElement.contains(target) && !target.classList.contains('resizer-handle')) {
-      this.selectedMedia = null;
+    if (media && editor && !editor.contains(target) && !target.classList.contains('resizer-handle')) {
+      this.selectedMedia.set(null);
     }
     
-    // Close palettes if clicking outside
     if (!target.closest('.color-picker-container') && !target.closest('.palette-picker-container')) {
-      this.showTextColorPicker = false;
-      this.showBgColorPicker = false;
-      this.showLinkPalette = false;
-      this.showVideoPalette = false;
+      this.showTextColorPicker.set(false);
+      this.showBgColorPicker.set(false);
+      this.showLinkPalette.set(false);
+      this.showVideoPalette.set(false);
     }
   }
 
   startResize(event: MouseEvent, handle: string) {
     event.preventDefault();
     event.stopPropagation();
-    if (!this.selectedMedia) return;
+    const media = this.selectedMedia();
+    if (!media) return;
 
-    this.isResizing = true;
+    this.isResizing.set(true);
     this.resizeHandle = handle;
     this.startX = event.clientX;
     this.startY = event.clientY;
-    this.startWidth = this.selectedMedia.clientWidth;
-    this.startHeight = this.selectedMedia.clientHeight;
+    this.startWidth = media.clientWidth;
+    this.startHeight = media.clientHeight;
 
     const onMouseMove = (e: MouseEvent) => this.doResize(e);
     const onMouseUp = () => {
-      this.isResizing = false;
+      this.isResizing.set(false);
       document.removeEventListener('mousemove', onMouseMove);
       document.removeEventListener('mouseup', onMouseUp);
       this.onInput(); 
@@ -1078,32 +1093,30 @@ export class NgxRwriter implements ControlValueAccessor, AfterViewInit, OnInit, 
   }
 
   doResize(event: MouseEvent) {
-    if (!this.isResizing || !this.selectedMedia) return;
+    const media = this.selectedMedia();
+    if (!this.isResizing() || !media) return;
 
     const dx = event.clientX - this.startX;
-    const dy = event.clientY - this.startY;
+    // const dy = event.clientY - this.startY; // Not used due to aspect ratio logic
 
     let newWidth = this.startWidth;
     let newHeight = this.startHeight;
 
     const ratio = this.startWidth / this.startHeight;
 
-    if (this.resizeHandle === 'br') {
+    if (this.resizeHandle === 'br' || this.resizeHandle === 'tr') {
       newWidth = this.startWidth + dx;
-    } else if (this.resizeHandle === 'tr') {
-      newWidth = this.startWidth + dx;
-    } else if (this.resizeHandle === 'bl') {
-      newWidth = this.startWidth - dx;
-    } else if (this.resizeHandle === 'tl') {
+    } else if (this.resizeHandle === 'bl' || this.resizeHandle === 'tl') {
       newWidth = this.startWidth - dx;
     }
 
     newHeight = newWidth / ratio;
 
     if (newWidth > 20 && newHeight > 20) {
-      this.selectedMedia.style.width = newWidth + 'px';
-      this.selectedMedia.style.height = (this.selectedMedia.tagName.toLowerCase() === 'video') ? 'auto' : newHeight + 'px';
+      media.style.width = newWidth + 'px';
+      media.style.height = (media.tagName.toLowerCase() === 'video') ? 'auto' : newHeight + 'px';
       this.updateResizerPosition();
     }
   }
 }
+

@@ -1,12 +1,12 @@
-import { Component, Input, ViewEncapsulation, inject, OnInit, OnChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Component, input, ViewEncapsulation, inject, signal, computed } from '@angular/core';
+import { DomSanitizer } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'ngx-rwriter-viewer',
   standalone: true,
   imports: [CommonModule],
-  template: `<div class="rwriter-content" [class.dark-theme]="isDarkTheme" [innerHTML]="safeContent"></div>`,
+  template: `<div class="rwriter-content" [class.dark-theme]="isDarkTheme()" [innerHTML]="safeContent()"></div>`,
   encapsulation: ViewEncapsulation.None,
   styles: [`
     .rwriter-content {
@@ -44,52 +44,29 @@ import { CommonModule } from '@angular/common';
     .dark-theme.rwriter-content blockquote { border-left-color: #475569 !important; color: #94a3b8 !important; }
   `]
 })
-export class NgxRwriterViewer implements OnInit, OnChanges, OnDestroy {
-  @Input() content: string = '';
-  @Input() theme: 'light' | 'dark' | 'auto' = 'auto';
+export class NgxRwriterViewer {
+  content = input<string>('');
+  theme = input<'light' | 'dark' | 'auto'>('auto');
 
-  isDarkTheme = false;
-  private mediaQueryList: MediaQueryList | null = null;
-  private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
+  private systemDark = signal(false);
 
-  private themeChangeListener = (e: MediaQueryListEvent) => {
-    if (this.theme === 'auto') {
-      this.isDarkTheme = e.matches;
-      this.cdr.detectChanges();
-    }
-  };
-
-  ngOnInit() {
+  constructor() {
     if (typeof window !== 'undefined' && window.matchMedia) {
-      this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
-      this.mediaQueryList.addEventListener('change', this.themeChangeListener);
-    }
-    this.updateThemeState();
-  }
-
-  ngOnChanges() {
-    this.updateThemeState();
-  }
-
-  ngOnDestroy() {
-    if (this.mediaQueryList) {
-      this.mediaQueryList.removeEventListener('change', this.themeChangeListener);
+      const media = window.matchMedia('(prefers-color-scheme: dark)');
+      this.systemDark.set(media.matches);
+      media.addEventListener('change', e => this.systemDark.set(e.matches));
     }
   }
 
-  private updateThemeState() {
-    if (this.theme === 'dark') {
-      this.isDarkTheme = true;
-    } else if (this.theme === 'light') {
-      this.isDarkTheme = false;
-    } else if (this.mediaQueryList) {
-      this.isDarkTheme = this.mediaQueryList.matches;
-    }
-  }
+  isDarkTheme = computed(() => {
+    const t = this.theme();
+    if (t === 'dark') return true;
+    if (t === 'light') return false;
+    return this.systemDark();
+  });
 
-  get safeContent(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(this.content || '');
-  }
+  safeContent = computed(() => this.sanitizer.bypassSecurityTrustHtml(this.content() || ''));
 }
+
 

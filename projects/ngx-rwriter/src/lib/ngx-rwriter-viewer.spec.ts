@@ -47,10 +47,19 @@ describe('NgxRwriterViewer', () => {
     }));
 
     fixture.componentRef.setInput('theme', 'auto');
-    component.ngOnInit(); // Trigger ngOnInit again with mock
-    fixture.detectChanges();
+    // For signal inputs and our custom logic in constructor, 
+    // we might need a fresh instance or manually trigger state if needed.
+    // In our modern component, systemDark is set in constructor.
+    // Since we mocked matchMedia AFTER component creation in beforeEach, 
+    // we should create component AFTER mocking or use a fresh fixture.
     
-    const element = fixture.nativeElement.querySelector('.rwriter-content');
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [NgxRwriterViewer] });
+    const newFixture = TestBed.createComponent(NgxRwriterViewer);
+    newFixture.componentRef.setInput('theme', 'auto');
+    newFixture.detectChanges();
+    
+    const element = newFixture.nativeElement.querySelector('.rwriter-content');
     expect(element.classList.contains('dark-theme')).toBe(false); 
   });
 
@@ -65,11 +74,14 @@ describe('NgxRwriterViewer', () => {
       dispatchEvent: vi.fn(),
     }));
 
-    fixture.componentRef.setInput('theme', 'auto');
-    component.ngOnInit(); // Trigger ngOnInit with dark mock
-    fixture.detectChanges();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ imports: [NgxRwriterViewer] });
+    const newFixture = TestBed.createComponent(NgxRwriterViewer);
+    newFixture.componentRef.setInput('theme', 'auto');
+    newFixture.detectChanges();
     
-    const element = fixture.nativeElement.querySelector('.rwriter-content');
+    const element = newFixture.nativeElement.querySelector('.rwriter-content');
     expect(element.classList.contains('dark-theme')).toBe(true);
   });
 });
+
